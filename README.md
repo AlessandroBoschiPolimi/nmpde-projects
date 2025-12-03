@@ -1,23 +1,40 @@
-### Organizing the source code
-Please place all your sources into the `src` folder.
+# TITLE
 
-Binary files must not be uploaded to the repository (including executables).
+## Build Commands
 
-Mesh files should not be uploaded to the repository. If applicable, upload `gmsh` scripts with suitable instructions to generate the meshes (and ideally a Makefile that runs those instructions). If not applicable, consider uploading the meshes to a different file sharing service, and providing a download link as part of the building and running instructions.
+**Linux**
 
-### Compiling
-To build the executable, make sure you have loaded the needed modules with
-```bash
-$ module load gcc-glibc dealii
-```
-Then run the following commands:
-```bash
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-```
-The executable will be created into `build`, and can be executed through
-```bash
-$ ./executable-name
-```
+To use dealii included in the AMSC constainer use
+
+	cmake -S . -B build
+
+otherwise, either
+- export the following environment variable with the path to your dealii installation
+
+		export DEAL_II_DIR=/path/to/dealii
+
+- specify it just for the cmake command
+
+		cmake -S . -B build -DDEAL_II_DIR=/path/to/dealii
+
+
+Then build using
+
+	cd build
+	make
+
+The resulting executable is build/PDE-06
+
+**Windows**
+
+Install dealii and then export an environment variable with the installation path
+
+	set DEAL_II_DIR=C:\path\to\dealii
+
+Then, open the folder with Visual Studio, it will automatically detect the CMakeLists.txt, then F5 to build and run, or ctrl+B to build.
+
+Alternatively, to generate a Visual Studio solution under the build folder
+
+	cmake -S . -B build -G "Visual Studio 17 2022"
+
+As above, it's possible to specify the dealii path directly in the cmake command.
