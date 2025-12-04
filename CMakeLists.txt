@@ -4,6 +4,7 @@ project(PDE-06 LANGUAGES CXX)
 # Set standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Source files
 file(GLOB_RECURSE PROJECT_FILES "src/*.cpp" "src/*.h" "src/*.hpp")

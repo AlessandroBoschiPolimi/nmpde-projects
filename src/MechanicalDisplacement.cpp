@@ -1,7 +1,9 @@
-#include "NonLinearDiffusion.hpp"
+#include "MechanicalDisplacement.hpp"
+
+#include <deal.II/fe/fe_q.h>
 
 void
-NonLinearDiffusion::setup()
+MechanicalDisplacement::setup()
 {
   // Create the mesh.
   {
@@ -39,7 +41,7 @@ NonLinearDiffusion::setup()
   {
     pcout << "Initializing the finite element space" << std::endl;
 
-    fe = std::make_unique<FE_SimplexP<dim>>(r);
+    fe = std::make_unique<FESystem<dim>>(FE_Q<dim>(r)^dim);
 
     pcout << "  Degree                     = " << fe->degree << std::endl;
     pcout << "  DoFs per cell              = " << fe->dofs_per_cell
@@ -104,7 +106,7 @@ NonLinearDiffusion::setup()
 }
 
 void
-NonLinearDiffusion::assemble_system()
+MechanicalDisplacement::assemble_system()
 {
   const unsigned int dofs_per_cell = fe->dofs_per_cell;
   const unsigned int n_q           = quadrature->size();
@@ -145,48 +147,33 @@ NonLinearDiffusion::assemble_system()
       fe_values.get_function_values(solution, solution_loc);
       fe_values.get_function_gradients(solution, solution_gradient_loc);
 
-      for (unsigned int q = 0; q < n_q; ++q)
-        {
-          const double mu_0_loc = 1.0;
-          const double mu_1_loc = 10.0;
-          const double f_loc    = 1.0;
+      for(const unsigned int i : fe_values.dof_indices()) {
+        // Getting the index of the i-th basis function
+        const unsigned int component_i = fe->system_to_component_index(i).first;
+        for (unsigned int q = 0; q < n_q; ++q) {
+          for(const unsigned int j : fe_values.dof_indices()) {
+            // Getting the index of the j-th basis function
+            const unsigned int component_j = fe->system_to_component_index(j).first;
+            const double mu = 1.0;
+            cell_matrix(i,j) += (component_i == component_j) ? 
+            fe_values.shape_grad(i, q) * fe_values.shape_grad(j,q)*
+            fe_values.JxW(q) : 0;
+            
+            cell_matrix(i,j) -= (component_i == component_j) ?
+            mu *
+            fe_values.shape_grad(i, q) * fe_values.shape_grad(j, q) *
+            fe_values.JxW(q) : 0;
+          }
 
-          for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            {
-              for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                {
-                  cell_matrix(i, j) +=
-                    (2.0 * mu_1_loc * solution_loc[q] *
-                     fe_values.shape_value(j, q)) *
-                    scalar_product(solution_gradient_loc[q],
-                                   fe_values.shape_grad(i, q)) *
-                    fe_values.JxW(q);
-
-                  cell_matrix(i, j) +=
-                    (mu_0_loc + mu_1_loc * solution_loc[q] * solution_loc[q]) *
-                    scalar_product(fe_values.shape_grad(j, q),
-                                   fe_values.shape_grad(i, q)) *
-                    fe_values.JxW(q);
-                }
-
-              // -F(v)
-              cell_rhs(i) +=
-                f_loc * fe_values.shape_value(i, q) * fe_values.JxW(q);
-
-              // a(u, v)
-              cell_rhs(i) -=
-                (mu_0_loc + mu_1_loc * solution_loc[q] * solution_loc[q]) *
-                scalar_product(solution_gradient_loc[q],
-                               fe_values.shape_grad(i, q)) *
-                fe_values.JxW(q);
-            }
+        cell_rhs(i) += 1; // HAVE FUN ONDREJ
         }
+      }
 
       cell->get_dof_indices(dof_indices);
 
       jacobian_matrix.add(dof_indices, cell_matrix);
       residual_vector.add(dof_indices, cell_rhs);
-    }
+  }
 
   jacobian_matrix.compress(VectorOperation::add);
   residual_vector.compress(VectorOperation::add);
@@ -211,7 +198,7 @@ NonLinearDiffusion::assemble_system()
 }
 
 void
-NonLinearDiffusion::solve_system()
+MechanicalDisplacement::solve_system()
 {
   SolverControl solver_control(1000, 1e-6 * residual_vector.l2_norm());
 
@@ -226,7 +213,7 @@ NonLinearDiffusion::solve_system()
 }
 
 void
-NonLinearDiffusion::solve_newton()
+MechanicalDisplacement::solve_newton()
 {
   pcout << "===============================================" << std::endl;
 
@@ -266,7 +253,7 @@ NonLinearDiffusion::solve_newton()
 }
 
 void
-NonLinearDiffusion::output() const
+MechanicalDisplacement::output() const
 {
   DataOut<dim> data_out;
   data_out.add_data_vector(dof_handler, solution, "u");

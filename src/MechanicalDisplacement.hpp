@@ -1,5 +1,5 @@
-#ifndef NON_LINEAR_DIFFUSION_HPP
-#define NON_LINEAR_DIFFUSION_HPP
+#ifndef MECHANICAL_DISPLACEMENT_HPP
+#define MECHANICAL_DISPLACEMENT_HPP 
 
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/quadrature_lib.h>
@@ -10,6 +10,7 @@
 #include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe_simplex_p.h>
+#include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_values.h>
 
 #include <deal.II/grid/grid_in.h>
@@ -29,14 +30,14 @@
 using namespace dealii;
 
 // Class representing the non-linear diffusion problem.
-class NonLinearDiffusion
+class MechanicalDisplacement
 {
 public:
   // Physical dimension (1D, 2D, 3D)
   static constexpr unsigned int dim = 3;
 
   // Constructor.
-  NonLinearDiffusion(const std::string &mesh_file_name_, const unsigned int &r_)
+  MechanicalDisplacement(const std::string &mesh_file_name_, const unsigned int &r_)
     : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
     , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
     , pcout(std::cout, mpi_rank == 0)
@@ -89,7 +90,7 @@ protected:
   parallel::fullydistributed::Triangulation<dim> mesh;
 
   // Finite element space.
-  std::unique_ptr<FiniteElement<dim>> fe;
+  std::unique_ptr<FESystem<dim>> fe;
 
   // Quadrature formula.
   std::unique_ptr<Quadrature<dim>> quadrature;
@@ -119,4 +120,4 @@ protected:
   TrilinosWrappers::MPI::Vector solution;
 };
 
-#endif
+#endif // MECHANICAL_DISPLACEMENT_HPP
