@@ -5,6 +5,7 @@
 
 build/*
 out/*
+mesh/*
 
 
 # User-specific files
