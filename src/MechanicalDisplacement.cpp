@@ -171,14 +171,24 @@ MechanicalDisplacement::assemble_system()
 				{
 					const unsigned int component_j = fe->system_to_component_index(j).first;
 
-					// TODO
-					cell_matrix(i,j) += (component_i == component_j)
-										? fe_values.shape_grad(i, q) * fe_values.shape_grad(j,q) * fe_values.JxW(q)
-										: 0;
-					
+					// Compute the lhs
+					// The first term of the lhs
 					cell_matrix(i,j) -= (component_i == component_j)
-										? mu * fe_values.shape_grad(i, q) * fe_values.shape_grad(j, q) * fe_values.JxW(q)
+										? mu * fe_values.shape_grad(i, q) * fe_values.shape_grad(j,q) * fe_values.JxW(q)
 										: 0;
+					//The second term of the lhs
+					//(I + grad(d))^{-T} grad(psi_i)^T (I + grad(d)) = (I + grad(d))^{-T}*A
+					// A = grad(phi_i)^T * F^-T => A_ab = (grad(phi_i))_a (F^-T)_index(i)b 
+					// I hope it makes sense, dealii cannot transpose vettor, so I cannnot think of a more elegant way
+					Tensor<2, dim> A;
+					for (unsigned int a = 0; a < dim; a++){
+						for (unsigned int b = 0; b < dim; b++){
+							A[a][b] = fe_values.shape_grad(i, q)[a] * idk_tinv[component_i][b];
+						}
+					}
+					Tensor<2, dim> B = idk_tinv * A;
+					// A : grad(psi_j) = sum_{a,b} A_ab grad(psi_j)_ab = sum_b A_index(j)b grad(psi_j)_b
+					cell_matrix(i,j) += (B * fe_values.shape_grad(j, q))[component_j];
 				}
 					
 
@@ -188,6 +198,7 @@ MechanicalDisplacement::assemble_system()
 					cell_rhs(i) += piola_m2_politecnico_universita_degli_studi[component_i][j]
 								 * fe_values.shape_grad(i, q)[j] // assuming really hard that this returns a Tensor<1, dim> representing the 3 derivatives of the only non zero entry in the base.
 								 * fe_values.JxW(q);
+					//RE: Ofc it does return a tensor, check the documentation
 				}
 			}
 		}
@@ -235,6 +246,7 @@ MechanicalDisplacement::assemble_system()
 	residual_vector.compress(VectorOperation::add);
 
 	// TODO: Boundary conditions, now it's not zero on the Ditto boundary, but an arbitrary g.
+	// Like this, isn't it 0 on all the boundaries? 
 	{
 		std::map<types::global_dof_index, double> boundary_values;
 
