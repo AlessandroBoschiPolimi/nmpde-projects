@@ -202,9 +202,15 @@ MechanicalDisplacement::assemble_system()
 				}
 			}
 		}
-
-		// Temporary function R3 -> R3 identically equal to 1
-		Functions::ConstantFunction<dim> h(1., 3);
+		//Try some meaningful Neumann conditions: Tranction <-|  |->
+		// h = tau_0 at x = 0, y = 0
+		// h = -tau_0 at x = L, y = L (L - size of cube)
+		// put dirichlet conditions on z = 0, z = L
+		// the folowwing code supposes 0, 2 are the z boundaries; 1, 3 are x = 0 and y = 0; 4,5; x = L,y = L
+		// TODO: I made that up, dunno how the boundaries really look like 
+		double tau_0 = 0.1;
+		Functions::ConstantFunction<dim> h_1(tau_0, 3);
+		Functions::ConstantFunction<dim> h_2(-tau_0, 3);
 
 		// Consider the contrubution of the Neumann boundary conditions on the RHS
 		if (cell->at_boundary())
@@ -212,7 +218,10 @@ MechanicalDisplacement::assemble_system()
 			for (unsigned int face_number = 0; face_number < cell->n_faces(); ++face_number)
 			{
 				// TODO: what about those ids?
-				if (!(cell->face(face_number)->at_boundary() && cell->face(face_number)->boundary_id() == 2))
+				const unsigned int bound_id = cell->face(face_number)->boundary_id();
+				if (!(cell->face(face_number)->at_boundary()
+					&& bound_id == 0
+					&& bound_id == 2))
 					continue;
 
 				fe_values_boundary.reinit(cell, face_number);
@@ -224,7 +233,10 @@ MechanicalDisplacement::assemble_system()
 						const unsigned int component_i = fe->system_to_component_index(i).first;
 					
 						Vector<double> hv(dim);
-						h.vector_value(fe_values_boundary.quadrature_point(q), hv);
+						if (bound_id == 1 || bound_id == 3)
+							h_1.vector_value(fe_values_boundary.quadrature_point(q), hv);
+						else
+							h_2.vector_value(fe_values_boundary.quadrature_point(q), hv);
 						
 						/// -\int_{\Gamma_N} h_{\textrm{comp}(i)} \psi_i
 						cell_rhs(i) -= hv[component_i]
@@ -246,15 +258,31 @@ MechanicalDisplacement::assemble_system()
 	residual_vector.compress(VectorOperation::add);
 
 	// TODO: Boundary conditions, now it's not zero on the Ditto boundary, but an arbitrary g.
-	// Like this, isn't it 0 on all the boundaries? 
+	// I want to put the Dirichlet conditions on 0 and 2 according to stuff above, not sure if its right here
+		/*
+			GAME
+			OVER
+		      ______
+		    .-"      "-.
+		   /            \
+		  |,  .-.  .-.  ,|
+		  | )(__/  \__)( |
+		  |/     /\     \|
+		  (_     ^^     _)
+		   \__|IIIIII|__/
+		    | \IIIIII/ |
+		    \          /
+		     `--------'
+		*/
 	{
 		std::map<types::global_dof_index, double> boundary_values;
 
 		std::map<types::boundary_id, const Function<dim> *> boundary_functions;
 		Functions::ZeroFunction<dim>                        zero_function;
-
-		for (unsigned int i = 0; i < 6; ++i)
-			boundary_functions[i] = &zero_function;
+		boundary_functions[0] = &zero_function;
+		boundary_functions[2] = &zero_function;
+		//for (unsigned int i = 0; i < 6; ++i)
+		//	boundary_functions[i] = &zero_function;
 
 		VectorTools::interpolate_boundary_values(dof_handler, boundary_functions, boundary_values);
 		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, true);
