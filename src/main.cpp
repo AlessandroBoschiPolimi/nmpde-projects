@@ -2,9 +2,10 @@
 #include <filesystem>
 #include "MechanicalDisplacement.hpp"
 #include <cstdlib>
-int main()
+int main(int argc, char *argv[])
 {
 	std::cout << "Hello" << '\n';
+	Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
 	const unsigned int r = 2;
 	const double tau_0 = 0.1;
 	const auto h  = [&tau_0](const Point<3> &p) {
