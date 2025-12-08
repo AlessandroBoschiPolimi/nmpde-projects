@@ -1,18 +1,45 @@
 #include "MechanicalDisplacement.hpp"
 
 #include <deal.II/fe/fe_q.h>
-
+#include <deal.II/grid/grid_generator.h>
 void
 MechanicalDisplacement::setup()
 {
 	// Create the mesh.
-	{
-		pcout << "Initializing the mesh" << std::endl;
+	//{
+	//	pcout << "Initializing the mesh" << std::endl;
 
-		// First we read the mesh from file into a serial (i.e. not parallel)
-		// triangulation.
-		Triangulation<dim> mesh_serial;
-
+	//	// First we read the mesh from file into a serial (i.e. not parallel)
+	//	// triangulation.
+	//	Triangulation<dim> mesh_serial;
+	//	  // Create the mesh.
+	// {
+	// Create the mesh using dealii generator, this gives us numbering of the faces
+	/* From the documentation:
+		
+	    Faces (quads in 3d): first the two faces with normals in x-, then y- and z-direction. For each two faces: first the face with normal in negative coordinate direction, then the one with normal in positive direction, i.e. the faces are ordered according to their normals pointing in -x, x, -y, y, -z, z direction.
+	
+	Therefore, the faces are numbered in the ordering: left, right, front, back, bottom and top face:
+	
+	*       *-------*        *-------*
+	*      /|       |       /       /|
+	*     / |   3   |      /   5   / |
+	*    /  |       |     /       /  |
+	*   *   |       |    *-------*   |
+	*   | 0 *-------*    |       | 1 *
+	*   |  /       /     |       |  /
+	*   | /   4   /      |   2   | /
+	*   |/       /       |       |/
+	*   *-------*        *-------*
+	* 
+	*/
+	    Triangulation<dim> mesh_serial;
+	    std::cout << "Initializing the mesh" << std::endl;
+	    const unsigned int num_cells = 100;
+	    GridGenerator::subdivided_hyper_cube(mesh_serial, num_cells, 0.0, 1.0, true);
+	    std::cout << "  Number of elements = " << mesh_serial.n_active_cells()
+	              << std::endl;
+	
 		{
 			GridIn<dim> grid_in;
 			grid_in.attach_triangulation(mesh_serial);
@@ -31,7 +58,6 @@ MechanicalDisplacement::setup()
 		// Notice that we write here the number of *global* active cells (across all
 		// processes).
 		pcout << "  Number of elements = " << mesh.n_global_active_cells() << std::endl;
-	}
 
 	pcout << "-----------------------------------------------" << std::endl;
 
