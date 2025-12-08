@@ -1,9 +1,27 @@
 #include <iostream>
 #include <filesystem>
-
+#include "MechanicalDisplacement.hpp"
+#include <cstdlib>
 int main()
 {
 	std::cout << "Hello" << '\n';
-
+	const unsigned int r = 2;
+	const double tau_0 = 0.1;
+	const auto h  = [&tau_0](const Point<3> &p) {
+	if (std::abs(p[0]) < 1e-8 && std::abs(p[1]) > 1e-8)
+		return Point<3>(-tau_0, 0, 0);
+	else if (std::abs(p[0]) > 1 - 1e-8 && std::abs(p[1]) > 1e-8)
+		return Point<3>(tau_0, 0, 0);
+	else if (std::abs(p[1]) < 1e-8 && std::abs(p[0]) > 1e-8)
+		return Point<3>(0, -tau_0, 0);
+	else if (std::abs(p[1]) > 1 - 1e-8 && std::abs(p[0]) > 1e-8)
+		return Point<3>(0, tau_0, 0);
+	else
+		return Point<3>(0, 0, 0);
+	};
+	MechanicalDisplacement Mech("Nenene_To_Se_Nedela", r, h);
+	Mech.setup();
+	Mech.solve_newton();
+	Mech.output();
 	return 0;
 }
