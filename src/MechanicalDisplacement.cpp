@@ -35,18 +35,17 @@ MechanicalDisplacement::setup()
 	*/
 	    Triangulation<dim> mesh_serial;
 	    std::cout << "Initializing the mesh" << std::endl;
-	    const unsigned int num_cells = 100;
 	    GridGenerator::subdivided_hyper_cube(mesh_serial, num_cells, 0.0, 1.0, true);
 	    std::cout << "  Number of elements = " << mesh_serial.n_active_cells()
 	              << std::endl;
 	
-		{
-			GridIn<dim> grid_in;
-			grid_in.attach_triangulation(mesh_serial);
-
-			std::ifstream grid_in_file(mesh_file_name);
-			grid_in.read_msh(grid_in_file);
-		}
+//		{
+//			GridIn<dim> grid_in;
+//			grid_in.attach_triangulation(mesh_serial);
+//
+//			std::ifstream grid_in_file(mesh_file_name);
+//			grid_in.read_msh(grid_in_file);
+//		}
 
 		// Then, we copy the triangulation into the parallel one.
 		{
