@@ -1,5 +1,5 @@
 #include "MechanicalDisplacement.hpp"
-
+#include <deal.II/lac/solver_bicgstab.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/grid/grid_generator.h>
 void
@@ -70,7 +70,7 @@ MechanicalDisplacement::setup()
 		pcout << "  DoFs per cell              = " << fe->dofs_per_cell << std::endl;
 
 		quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
-
+		quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
 		pcout << "  Quadrature points per cell = " << quadrature->size() << std::endl;
 	}
 
@@ -141,7 +141,6 @@ MechanicalDisplacement::assemble_system()
 	/// \int_{\Omega} \sum_j^{dim} P_{\textrm{comp}(i),j} (d^{(k)}) \partial_j [\psi_i]_{\textrm{comp}(i)}
 	/// - \int_{\Gamma_N} h_{\textrm{comp}(i)} \psi_i
 	Vector<double>     cell_rhs(dofs_per_cell);
-
 	std::vector<types::global_dof_index> dof_indices(dofs_per_cell);
 
 	jacobian_matrix = 0.0;
@@ -149,7 +148,7 @@ MechanicalDisplacement::assemble_system()
 
 	// We use these vectors to store the old solution (i.e. at previous Newton
 	// iteration) and its gradient on quadrature nodes of the current cell.
-	std::vector<double>         solution_loc(n_q);
+	std::vector<Vector<double>>         solution_loc(n_q, Vector<double>(dim));
 	std::vector<Tensor<2, dim>> solution_gradient_loc(n_q);
 	FEValuesExtractors::Vector u(0);
 
@@ -169,12 +168,11 @@ MechanicalDisplacement::assemble_system()
 		// ChatGPT gave me this, i have no idea what is going on, what is a FEValuesExtractor?
 		// is there a cleaner way to achieve this? why does the "standard" get_function_gradients() without extractor work with Tensor<1, dim>?
 		// why do i have to specify an extractor without any initialization, can't it be done automatically? what am i doing awake at 3:50am?
-		Vector<double> solution_at_dofs(dofs_per_cell);
-		for (unsigned int i = 0; i < dofs_per_cell; ++i)
-			solution_at_dofs[i] = solution[dof_indices[i]];
-		fe_values[u].get_function_gradients(solution_at_dofs, solution_gradient_loc);
+		//Vector<double> solution_at_dofs(dofs_per_cell);
+		//for (unsigned int i = 0; i < dofs_per_cell; ++i)
+		//	solution_at_dofs[i] = solution[dof_indices[i]];
+		fe_values[u].get_function_gradients(solution, solution_gradient_loc);
 
-		const double mu = 1.0;
 
 		for (unsigned int q = 0; q < n_q; ++q)
 		{
@@ -234,8 +232,8 @@ MechanicalDisplacement::assemble_system()
 			{
 				const unsigned int bound_id = cell->face(face_number)->boundary_id();
 				if (!(cell->face(face_number)->at_boundary()
-					&& bound_id == 4
-					&& bound_id == 5))
+					|| bound_id == 4
+					|| bound_id == 5))
 					continue;
 
 				fe_values_boundary.reinit(cell, face_number);
@@ -250,10 +248,9 @@ MechanicalDisplacement::assemble_system()
 						/// -\int_{\Gamma_N} h_{\textrm{comp}(i)} \psi_i
 						cell_rhs(i) -= h(fe_values_boundary.quadrature_point(q))[component_i]
 									 * fe_values_boundary.shape_value(i, q)
-									 * fe_values_boundary.JxW(q);
-						
-				}
+									 * fe_values_boundary.JxW(q);	
 			}
+		}
 		}
 
 		cell->get_dof_indices(dof_indices);
@@ -269,14 +266,14 @@ MechanicalDisplacement::assemble_system()
 		std::map<types::global_dof_index, double> boundary_values;
 
 		std::map<types::boundary_id, const Function<dim> *> boundary_functions;
-		Functions::ZeroFunction<dim>                        zero_function;
+		Functions::ZeroFunction<dim>                        zero_function(dim);
 		boundary_functions[4] = &zero_function;
 		boundary_functions[5] = &zero_function;
 		//for (unsigned int i = 0; i < 6; ++i)
 		//	boundary_functions[i] = &zero_function;
 
 		VectorTools::interpolate_boundary_values(dof_handler, boundary_functions, boundary_values);
-		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, true);
+		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
 	}
 }
 
@@ -286,8 +283,8 @@ MechanicalDisplacement::solve_system()
 	SolverControl solver_control(1000, 1e-6 * residual_vector.l2_norm());
 
 	SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
-	TrilinosWrappers::PreconditionSSOR         preconditioner;
-	preconditioner.initialize(jacobian_matrix, TrilinosWrappers::PreconditionSSOR::AdditionalData(1.0));
+	TrilinosWrappers::PreconditionAMG         preconditioner;
+	preconditioner.initialize(jacobian_matrix);
 
 	solver.solve(jacobian_matrix, delta_owned, residual_vector, preconditioner);
 	pcout << "   " << solver_control.last_step() << " GMRES iterations" << std::endl;
@@ -303,7 +300,6 @@ MechanicalDisplacement::solve_newton()
 
 	unsigned int n_iter        = 0;
 	double       residual_norm = residual_tolerance + 1;
-
 	while (n_iter < n_max_iters && residual_norm > residual_tolerance)
 	{
 		assemble_system();
