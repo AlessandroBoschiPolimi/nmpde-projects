@@ -39,12 +39,13 @@ public:
   static constexpr unsigned int dim = 3;
 
   // Constructor.
-  MechanicalDisplacement(const std::string &mesh_file_name_, const unsigned int &r_)
+  MechanicalDisplacement(const std::string &mesh_file_name_, const unsigned int &r_, const std::function<Point <dim>(const Point<dim> &)> &h_)
     : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
     , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
     , pcout(std::cout, mpi_rank == 0)
     , mesh_file_name(mesh_file_name_)
     , r(r_)
+    , h(h_)
     , mesh(MPI_COMM_WORLD)
   {}
 
@@ -87,7 +88,9 @@ protected:
 
   // Polynomial degree.
   const unsigned int r;
-
+  // Neumann boundary condition.
+  std::function<Point<dim> (const Point<dim> &)> h;
+  
   // Mesh.
   parallel::fullydistributed::Triangulation<dim> mesh;
 
