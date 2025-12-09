@@ -168,8 +168,8 @@ void NeoHooke::assemble_system() {
 
 		for(unsigned int j = 0; j < dim; j++) {
 		    // TODO: Check this computation cause I'm not conviced it is right in any way
-		    cell_rhs(i) += displacement_tensor[j][comp_i] * fe_values.shape_grad(i,q)[comp_i] * fe_values.JxW(q);
-		    cell_rhs(i) += inverse_displacement[j][comp_i] * fe_values.shape_grad(i,q)[comp_i] * fe_values.JxW(q);
+		    cell_rhs(i) -= displacement_tensor[j][comp_i] * fe_values.shape_grad(i,q)[comp_i] * fe_values.JxW(q);
+		    cell_rhs(i) -= inverse_displacement[j][comp_i] * fe_values.shape_grad(i,q)[comp_i] * fe_values.JxW(q);
 		}
 
 	    }
@@ -185,21 +185,21 @@ void NeoHooke::assemble_system() {
     }
 
     // TODO: add boundary conditions
-    {
-	std::map<types::global_dof_index, double> boundary_values;
-
-	std::map<types::boundary_id, const Function<dim> *> boundary_functions;
-	Functions::ZeroFunction<dim>                        zero_function;
-
-	for (unsigned int i = 0; i < 6; ++i)
-	    boundary_functions[i] = &zero_function;
-
-	VectorTools::interpolate_boundary_values(dof_handler,
-					 boundary_functions,
-					 boundary_values);
-
-	MatrixTools::apply_boundary_values(boundary_values, system_matrix, delta, system_rhs, true);
-    }
+	//    {
+	// std::map<types::global_dof_index, double> boundary_values;
+	//
+	// std::map<types::boundary_id, const Function<dim> *> boundary_functions;
+	// Functions::ZeroFunction<dim>                        zero_function;
+	//
+	// for (unsigned int i = 0; i < 6; ++i)
+	//     boundary_functions[i] = &zero_function;
+	//
+	// VectorTools::interpolate_boundary_values(dof_handler,
+	// 				 boundary_functions,
+	// 				 boundary_values);
+	//
+	// MatrixTools::apply_boundary_values(boundary_values, system_matrix, delta, system_rhs, true);
+	//    }
 
 }
 
