@@ -19,7 +19,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 
-#define GAMBA_DEBUG true
+#define GAMBA_DEBUG false
 
 using namespace pde;
 
@@ -47,7 +47,6 @@ void NeoHooke::setup() {
 	*   *-------*        *-------*
 	* 
 	*/
-	Triangulation<dim> mesh_serial;
 	std::cout << "Initializing the mesh" << std::endl;
 	GridGenerator::subdivided_hyper_cube(mesh, num_cells, 0.0, 1.0, true);
 	std::cout << "Number of elements = " << mesh.n_active_cells()
@@ -208,28 +207,32 @@ void NeoHooke::assemble_system() {
 	    for (unsigned int face_number = 0; 
 		face_number < cell->n_faces();
 		face_number++) {
-		    // If current face lies on the boundary, and its boundary ID (or
-		    // tag) is that of one of the Neumann boundaries, we assemble the
-		    // boundary integral.
-		    if ( cell->face(face_number)->at_boundary() &&
-			( cell->face(face_number)->boundary_id() == 4 ||
-			cell->face(face_number)->boundary_id() == 5 )
-		    ) {
-		    fe_values_boundary.reinit(cell, face_number);
 
-		    for (unsigned int q : fe_values_boundary.quadrature_point_indices()) {
-			for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+		const unsigned int bound_id = cell->face(face_number)->boundary_id();
 
-			    #if GAMBA_DEBUG
-				std::cout << "Point(q) " << fe_values_boundary.quadrature_point(q)  << std::endl;
-				std::cout << "fe_values_boundary[displacement].value(i, q) " << fe_values_boundary[displacement].value(i, q) << std::endl;
-			    #endif
+		if (!cell->face(face_number)->at_boundary()
+			|| bound_id == 4
+			|| bound_id == 5)
+			continue;
 
-			    cell_rhs(i) +=
-			    h(fe_values_boundary.quadrature_point(q)) *
-			    fe_values_boundary[displacement].value(i, q) *     
-			    fe_values_boundary.JxW(q);
-		    	}
+		// If current face lies on the boundary, and its boundary ID (or
+		// tag) is that of one of the Neumann boundaries, we assemble the
+		// boundary integral.
+
+		fe_values_boundary.reinit(cell, face_number);
+
+		for (unsigned int q : fe_values_boundary.quadrature_point_indices()) {
+		    for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+
+			#if GAMBA_DEBUG
+			    std::cout << "Point(q) " << fe_values_boundary.quadrature_point(q)  << std::endl;
+			    std::cout << "fe_values_boundary[displacement].value(i, q) " << fe_values_boundary[displacement].value(i, q) << std::endl;
+			#endif
+
+			cell_rhs(i) +=
+			h(fe_values_boundary.quadrature_point(q)) *
+			fe_values_boundary[displacement].value(i, q) *     
+			fe_values_boundary.JxW(q);
 		    }
 		}
 	    }
