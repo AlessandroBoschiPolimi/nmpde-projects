@@ -8,6 +8,7 @@ int main(/*int argc, char *argv[]*/)
 
     //Material constant
     const double C = 3; //Pa
+    const double lambda = 1; //Pa
     //Number of cells inside a hypercube
     const unsigned int num_cells = 8;
     const double tau_0 = 0.5;
@@ -28,7 +29,7 @@ int main(/*int argc, char *argv[]*/)
 		return Point<dim>(0, 0, 0);
     };
 
-    NeoHooke problem = NeoHooke("gds", r, C, h, num_cells);
+    NeoHooke problem = NeoHooke("gds", r, C, lambda, h, num_cells);
     problem.setup();
     problem.solve();
     problem.output();
