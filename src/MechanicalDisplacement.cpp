@@ -135,7 +135,7 @@ MechanicalDisplacement::assemble_system()
 
 	// Since we need to compute integrals on the boundary for Neumann conditions,
 	// we also need a FEValues object to compute quantities on boundary edges (faces).
-	FEFaceValues<dim> fe_values_boundary(*fe, *quadrature_boundary, update_values | update_quadrature_points | update_JxW_values);
+	FEFaceValues<dim> fe_values_boundary(*fe, *quadrature_boundary, update_values | update_gradients | update_quadrature_points | update_JxW_values);
 
 	FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
 	/// \int_{\Omega} \sum_j^{dim} P_{\textrm{comp}(i),j} (d^{(k)}) \partial_j [\psi_i]_{\textrm{comp}(i)}
@@ -181,16 +181,16 @@ MechanicalDisplacement::assemble_system()
 			for (unsigned int i = 0; i < dim; ++i)
 				I[i][i] = 1.0;
 			
-			auto idk = I - solution_gradient_loc[q];
+			auto idk = I + solution_gradient_loc[q];
 			auto idk_tinv = invert(transpose(idk));
 			
 			Tensor<2,dim> piola_m2_politecnico_universita_degli_studi = mu * (idk - idk_tinv);
 
-			for(const unsigned int i : fe_values.dof_indices())
+			for(unsigned int i = 0; i < dofs_per_cell; i++)
 			{
 				const unsigned int component_i = fe->system_to_component_index(i).first;
 				
-				for (const unsigned int j : fe_values.dof_indices())
+				for(unsigned int j = 0; j < dofs_per_cell; j++)
 				{
 					const unsigned int component_j = fe->system_to_component_index(j).first;
 
@@ -211,10 +211,9 @@ MechanicalDisplacement::assemble_system()
 					}
 					Tensor<2, dim> B = idk_tinv * A;
 					// A : grad(psi_j) = sum_{a,b} A_ab grad(psi_j)_ab = sum_b A_index(j)b grad(psi_j)_b
-					cell_matrix(i,j) += (B * fe_values.shape_grad(j, q))[component_j];
+					cell_matrix(i,j) -= mu * (B * fe_values.shape_grad(j, q))[component_j] * fe_values.JxW(q);
 				}
 					
-
 				for (unsigned int j = 0; j < dim; j++)
 				{
 					/// \int_{\Omega} \sum_j^{dim} P_{\textrm{comp}(i),j} (d^{(k)}) \partial_j [\psi_i]_{\textrm{comp}(i)}
@@ -231,7 +230,7 @@ MechanicalDisplacement::assemble_system()
 			for (unsigned int face_number = 0; face_number < cell->n_faces(); ++face_number)
 			{
 				const unsigned int bound_id = cell->face(face_number)->boundary_id();
-				if (!(cell->face(face_number)->at_boundary()
+				if ((!cell->face(face_number)->at_boundary()
 					|| bound_id == 4
 					|| bound_id == 5))
 					continue;
@@ -240,7 +239,7 @@ MechanicalDisplacement::assemble_system()
 
 				for (unsigned int q = 0; q < quadrature_boundary->size(); ++q)
 				{
-					for (unsigned int i = 0; i < dofs_per_cell; ++i)
+					for(const unsigned int i : fe_values.dof_indices())
 					{
 						const unsigned int component_i = fe->system_to_component_index(i).first;
 					
@@ -253,37 +252,36 @@ MechanicalDisplacement::assemble_system()
 		}
 		}
 
+	}
 		cell->get_dof_indices(dof_indices);
 
 		jacobian_matrix.add(dof_indices, cell_matrix);
 		residual_vector.add(dof_indices, cell_rhs);
-	}
 
+	}
 	jacobian_matrix.compress(VectorOperation::add);
 	residual_vector.compress(VectorOperation::add);
-
 	// TODO: Boundary conditions, now it's not zero on the Ditto boundary, but an arbitrary g.
-		std::map<types::global_dof_index, double> boundary_values;
-
-		std::map<types::boundary_id, const Function<dim> *> boundary_functions;
-		Functions::ZeroFunction<dim>                        zero_function(dim);
-		boundary_functions[4] = &zero_function;
-		boundary_functions[5] = &zero_function;
-		//for (unsigned int i = 0; i < 6; ++i)
-		//	boundary_functions[i] = &zero_function;
-
-		VectorTools::interpolate_boundary_values(dof_handler, boundary_functions, boundary_values);
-		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
-	}
+//		std::map<types::global_dof_index, double> boundary_values;
+//
+//		std::map<types::boundary_id, const Function<dim> *> boundary_functions;
+//		Functions::ZeroFunction<dim>                        zero_function(dim);
+//		boundary_functions[4] = &zero_function;
+//		boundary_functions[5] = &zero_function;
+//		//for (unsigned int i = 0; i < 6; ++i)
+//		//	boundary_functions[i] = &zero_function;
+//		    VectorTools::interpolate_boundary_values(dof_handler,
+//                                             boundary_functions,
+//                                             boundary_values);
+//		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, true);
 }
 
 void
 MechanicalDisplacement::solve_system()
 {
 	SolverControl solver_control(1000, 1e-6 * residual_vector.l2_norm());
-
 	SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
-	TrilinosWrappers::PreconditionAMG         preconditioner;
+	TrilinosWrappers::PreconditionILU         preconditioner;
 	preconditioner.initialize(jacobian_matrix);
 
 	solver.solve(jacobian_matrix, delta_owned, residual_vector, preconditioner);
