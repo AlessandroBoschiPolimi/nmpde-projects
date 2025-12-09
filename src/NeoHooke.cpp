@@ -18,8 +18,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
-#include <deal.II/lac/trilinos_precondition.h>
-#include <deal.II/lac/trilinos_solver.h>
+#include <deal.II/lac/solver_bicgstab.h>
 
 #include <filesystem>
 #include <iostream>
@@ -72,8 +71,8 @@ void NeoHooke::setup() {
 		  << std::endl;
 
 	// TODO: Check that these quadrature are correct enough
-	quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
-	quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
+	quadrature = std::make_unique<QGauss<dim>>(r + 1);
+	quadrature_boundary = std::make_unique<QGauss<dim - 1>>(r + 1);
 
 	std::cout << "  Quadrature points per cell = " << quadrature->size()
 	  << std::endl;
