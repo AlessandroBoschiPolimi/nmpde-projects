@@ -7,10 +7,10 @@ int main(/*int argc, char *argv[]*/)
     const unsigned int r = 1;
 
     //Material constant
-    const double C = 3; //Pa
-    const double lambda = 1; //Pa
+    const double C = 1; //Pa
+    const double lambda = 2; //Pa
     //Number of cells inside a hypercube
-    const unsigned int num_cells = 8;
+    const unsigned int num_cells = 10;
     const double tau_0 = 0.5;
     //Pulling the cube appart <-|  |-> in x,y directions
     //The dirichlet conditions are set to 0 on the z boundaries
@@ -18,13 +18,13 @@ int main(/*int argc, char *argv[]*/)
     const auto h  = [&tau_0](const Point<dim> &p) {
 	double small_tol = 1e-13;
 	if (std::abs(p[0]) < small_tol && std::abs(p[1]) > small_tol)
-		return Point<dim>(-tau_0, 0, 0);
-	else if (std::abs(p[0]) > (1 - small_tol) && std::abs(p[1]) > small_tol)
 		return Point<dim>(tau_0, 0, 0);
+	else if (std::abs(p[0]) > (1 - small_tol) && std::abs(p[1]) > small_tol)
+		return Point<dim>(-tau_0, 0, 0);
 	else if (std::abs(p[1]) < small_tol && std::abs(p[0]) > small_tol)
-		return Point<dim>(0, -tau_0, 0);
+		return Point<dim>(0, 0, 0);
 	else if (std::abs(p[1]) > (1 - small_tol) && std::abs(p[0]) > small_tol)
-		return Point<dim>(0, tau_0, 0);
+		return Point<dim>(0, 0, 0);
 	else
 		return Point<dim>(0, 0, 0);
     };
