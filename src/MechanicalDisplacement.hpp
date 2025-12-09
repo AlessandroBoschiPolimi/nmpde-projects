@@ -1,12 +1,18 @@
-#ifndef REWRITE_HPP
-#define REWRITE_HPP
+#ifndef MECHANICAL_DISPLACEMENT_HPP
+#define MECHANICAL_DISPLACEMENT_HPP
 
-#include <deal.II/fe/fe_system.h>
-
-#include <deal.II/dofs/dof_handler.h>
-
-#include <deal.II/lac/sparse_matrix.h>
 #include <memory>
+
+#include <deal.II/lac/vector.h> // vector
+#include <deal.II/base/quadrature.h> // quadrature
+
+#include <deal.II/fe/fe_system.h> // fesystem
+#include <deal.II/grid/tria.h> // traingulation
+
+#include <deal.II/dofs/dof_handler.h> // dof handler
+
+#include <deal.II/lac/sparse_matrix.h> // sparse matrix
+#include <deal.II/lac/sparsity_pattern.h> // sparsity pattern
 
 // TODO: understand why must use = 0 after virtual function
 
@@ -22,6 +28,8 @@ protected:
 
     const std::string mesh_file_name;
     const unsigned int r;
+
+    // Neumann conditions
     const std::function<Point<dim>(const Point<dim> &)> h;
     
     Triangulation<dim> mesh;
@@ -38,8 +46,8 @@ protected:
 
     // Matrices
     SparsityPattern sparsity_pattern;
-    SparseMatrix<double> system_matrix;
-    Vector<double> system_rhs;
+    SparseMatrix<double> jacobian_matrix;
+    Vector<double> residual_vector;
     Vector<double> solution;
     Vector<double> delta;
 
@@ -67,5 +75,4 @@ public:
 
 }
 
-
-#endif // REWRITE_HPP
+#endif // MECHANICAL_DISPLACEMENT_HPP
