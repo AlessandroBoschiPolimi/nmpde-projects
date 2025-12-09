@@ -19,6 +19,11 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 
+#include <filesystem>
+#include <iostream>
+#include <fstream>
+#include <deal.II/numerics/data_out.h>
+
 #define GAMBA_DEBUG false
 
 using namespace pde;
@@ -253,22 +258,21 @@ void NeoHooke::assemble_system() {
 
     // TODO: add dirichelet boundary conditions
 
-    //    {
-	// std::map<types::global_dof_index, double> boundary_values;
-	//
-	// std::map<types::boundary_id, const Function<dim> *> boundary_functions;
-	// Functions::ZeroFunction<dim>                        zero_function;
-	//
-	// for (unsigned int i = 0; i < 6; ++i)
-	//     boundary_functions[i] = &zero_function;
-	//
-	// VectorTools::interpolate_boundary_values(dof_handler,
-	// 				 boundary_functions,
-	// 				 boundary_values);
-	//
-	// MatrixTools::apply_boundary_values(boundary_values, system_matrix, delta, system_rhs, true);
-	//    }
+    {
+	std::map<types::global_dof_index, double> boundary_values;
 
+	std::map<types::boundary_id, const Function<dim> *> boundary_functions;
+	Functions::ZeroFunction<dim>                        zero_function(dim);
+
+	boundary_functions[4] = &zero_function;
+	boundary_functions[5] = &zero_function;
+
+	VectorTools::interpolate_boundary_values(dof_handler,
+				 boundary_functions,
+				 boundary_values);
+
+	MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta, residual_vector);
+    }
 }
 
 void NeoHooke::solve_system() {
@@ -319,5 +323,28 @@ void NeoHooke::solve() {
 }
 
 void NeoHooke::output() const {
+    std::cout << "===============================================" << std::endl;
 
+    std::vector<std::string> solution_names(dim, "displacement");
+
+    std::vector<DataComponentInterpretation::DataComponentInterpretation>
+    data_component_interpretation
+    (dim, DataComponentInterpretation::component_is_part_of_vector);
+
+    DataOut<dim> data_out;
+    data_out.attach_dof_handler(dof_handler);
+    data_out.add_data_vector(dof_handler, solution, solution_names, data_component_interpretation);
+    data_out.build_patches();
+
+    // Use std::filesystem to construct the output file name based on the
+    // mesh file name.
+    const std::filesystem::path mesh_path(mesh_file_name);
+    const std::string           output_file_name =
+    "output-" + mesh_path.stem().string() + ".vtk";
+    std::ofstream output_file(output_file_name);
+    data_out.write_vtk(output_file);
+
+    std::cout << "Output written to " << output_file_name << std::endl;
+
+    std::cout << "===============================================" << std::endl;
 }

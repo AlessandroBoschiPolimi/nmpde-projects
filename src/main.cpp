@@ -28,8 +28,9 @@ int main(/*int argc, char *argv[]*/)
 		return Point<dim>(0, 0, 0);
     };
 
-    NeoHooke problem = NeoHooke("", r, C, h, num_cells);
+    NeoHooke problem = NeoHooke("gds", r, C, h, num_cells);
     problem.setup();
     problem.solve();
+    problem.output();
     return 0;
 }
