@@ -262,18 +262,18 @@ MechanicalDisplacement::assemble_system()
 	jacobian_matrix.compress(VectorOperation::add);
 	residual_vector.compress(VectorOperation::add);
 	// TODO: Boundary conditions, now it's not zero on the Ditto boundary, but an arbitrary g.
-//		std::map<types::global_dof_index, double> boundary_values;
-//
-//		std::map<types::boundary_id, const Function<dim> *> boundary_functions;
-//		Functions::ZeroFunction<dim>                        zero_function(dim);
-//		boundary_functions[4] = &zero_function;
-//		boundary_functions[5] = &zero_function;
-//		//for (unsigned int i = 0; i < 6; ++i)
-//		//	boundary_functions[i] = &zero_function;
-//		    VectorTools::interpolate_boundary_values(dof_handler,
-//                                             boundary_functions,
-//                                             boundary_values);
-//		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, true);
+		std::map<types::global_dof_index, double> boundary_values;
+
+		std::map<types::boundary_id, const Function<dim> *> boundary_functions;
+		Functions::ZeroFunction<dim>                        zero_function(dim);
+		boundary_functions[4] = &zero_function;
+		boundary_functions[5] = &zero_function;
+		//for (unsigned int i = 0; i < 6; ++i)
+		//	boundary_functions[i] = &zero_function;
+		    VectorTools::interpolate_boundary_values(dof_handler,
+                                             boundary_functions,
+                                             boundary_values);
+		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
 }
 
 void
@@ -331,7 +331,15 @@ void
 MechanicalDisplacement::output() const
 {
 	DataOut<dim> data_out;
-	data_out.add_data_vector(dof_handler, solution, "u");
+	std::vector<DataComponentInterpretation::DataComponentInterpretation>
+        data_component_interpretation(
+      dim, DataComponentInterpretation::component_is_part_of_vector);
+  	std::vector<std::string> solution_names(dim, "u");
+
+  data_out.add_data_vector(dof_handler,
+                           solution,
+                           solution_names,
+                           data_component_interpretation);
 
 	std::vector<unsigned int> partition_int(mesh.n_active_cells());
 	GridTools::get_subdomain_association(mesh, partition_int);
