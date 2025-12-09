@@ -18,6 +18,8 @@
 
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
+#include <deal.II/lac/trilinos_precondition.h>
+#include <deal.II/lac/trilinos_solver.h>
 
 #include <filesystem>
 #include <iostream>
@@ -185,7 +187,9 @@ void NeoHooke::assemble_system() {
 		Tensor<2,dim> displacement_tensor({{1,0,0},{0,1,0},{0,0,1}});
 		displacement_tensor += solution_gradient_loc[q];
 		const Tensor<2,dim> inverse_displacement = transpose(invert(displacement_tensor));
-
+		//Compute determinant of the displacement tensor F
+		//I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
+		const double determinant_displacement = std::abs(determinant(displacement_tensor));
 		for ( const unsigned j : fe_values.dof_indices() ) {
 		    // base to describe delta
 		    const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
@@ -197,7 +201,21 @@ void NeoHooke::assemble_system() {
 			double_contract<0,0,1,1>(phi_j_grad, phi_i_grad) + 
 			double_contract<0,0,1,1>(second_member , phi_i_grad)
 			) * fe_values.JxW(q);
+
+		    //Add two additional terms arrising when lambda =/= 0
 		    
+		    //TODO: validate this is lambda * (grad(delta):F^{-T} * F^{-T}:grad(v))
+		    cell_matrix(i,j) += lambda * (
+			double_contract<0,0,1,1>(phi_j_grad, inverse_displacement) * 
+			double_contract<0,0,1,1>(inverse_displacement , phi_i_grad)
+			) * fe_values.JxW(q);
+
+		    //TODO: validate this is -lambda * ln(J) * (F^{-T} * grad(delta)^{T} * F^{-T}):grad(v)
+		    //Is the std log relly the best here?
+		    cell_matrix(i,j) -= lambda * std::log(determinant_displacement) * (
+			double_contract<0,0,1,1>(second_member,phi_i_grad)
+			) * fe_values.JxW(q);
+
 
 		}
 
@@ -205,6 +223,11 @@ void NeoHooke::assemble_system() {
 		    double_contract<0,0,1,1>(displacement_tensor, phi_i_grad) -
 		    double_contract<0,0,1,1>(inverse_displacement, phi_i_grad)
 		) * fe_values.JxW(q);
+		//We also have to add the part with lambda to the right side
+		cell_rhs(i) -= lambda * std::log(determinant_displacement) * (
+		    double_contract<0,0,1,1>(inverse_displacement, phi_i_grad)
+		) * fe_values.JxW(q);
+
 	    }
 	}
 	
@@ -281,7 +304,7 @@ void NeoHooke::solve_system() {
 
     SolverGMRES<Vector<double>> solver(solver_control);
     
-    PreconditionSSOR preconditioner;
+    PreconditionSOR preconditioner;
     preconditioner.initialize(jacobian_matrix);
 
     solver.solve(jacobian_matrix, delta, residual_vector, preconditioner);
