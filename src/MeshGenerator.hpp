@@ -55,7 +55,10 @@ public:
 
     Type ElementType() const override { return Type::Tetrahedra; }
 
-    bool OnNeumannBoundary(const int id) const override { return id == 1 || id == 3; }
+    bool OnNeumannBoundary(const int id) const override { return id == outside_id || id == inside_id; }
+
+private:
+    static constexpr int outside_id = 1, top_id = 2, inside_id = 3;
 };
 
 template <int dim>
