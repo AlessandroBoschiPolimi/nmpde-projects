@@ -19,19 +19,21 @@
 
 #include <memory>
 
+#include "MeshGenerator.hpp"
+
 // TODO: understand why must use = 0 after virtual function
 
 namespace pde {
 
 using namespace dealii;
 
-class MechanicalDisplacement {
-
-public: static const unsigned int dim = 3;
+class MechanicalDisplacement
+{
+public:
+    static const unsigned int dim = 3;
 
 protected:
-
-    const std::string mesh_file_name;
+    const std::unique_ptr<MeshGenerator<dim>> mesh_generator;
     const unsigned int r;
 
     // Neumann conditions
@@ -90,21 +92,21 @@ protected:
 public:
 
     MechanicalDisplacement(
-        const std::string mesh_file_name_,
-        const unsigned int &r_,
-	const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
-        const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-	const unsigned int num_cells_
-    ):
-    mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
-    mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
-    pcout(std::cout, mpi_rank == 0),
-    mesh_file_name(mesh_file_name_),
-    r(r_),
-    neumann_conds(neum_funcs_),
-    dirichelet_conds(boundary_functions_),
-    num_cells(num_cells_),
-    mesh(MPI_COMM_WORLD)
+            std::unique_ptr<MeshGenerator<dim>> mesh_generator_,
+            const unsigned int &r_,
+            const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
+            const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
+            const unsigned int num_cells_
+        ) :
+        mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
+        mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
+        pcout(std::cout, mpi_rank == 0),
+        mesh_generator(std::move(mesh_generator_)),
+        r(r_),
+        neumann_conds(neum_funcs_),
+        dirichelet_conds(boundary_functions_),
+        num_cells(num_cells_),
+        mesh(MPI_COMM_WORLD)
     {}
     
     virtual void setup() = 0;

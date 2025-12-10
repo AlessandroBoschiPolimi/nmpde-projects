@@ -18,17 +18,17 @@ int main(int argc, char *argv[])
     //The dirichlet conditions are set to 0 on the z boundaries
     //The object can change volume, since lambda = 0 in our model
     const auto h  = [&tau_0](const Point<dim> &p) {
-	double small_tol = 1e-13;
-	if (std::abs(p[0]) < small_tol && std::abs(p[1]) > small_tol)
-		return Point<dim>(tau_0, 0, 0);
-	else if (std::abs(p[0]) > (1 - small_tol) && std::abs(p[1]) > small_tol)
-		return Point<dim>(-tau_0, 0, 0);
-	else if (std::abs(p[1]) < small_tol && std::abs(p[0]) > small_tol)
-		return Point<dim>(0, 0, 0);
-	else if (std::abs(p[1]) > (1 - small_tol) && std::abs(p[0]) > small_tol)
-		return Point<dim>(0, 0, 0);
-	else
-		return Point<dim>(0, 0, 0);
+        double small_tol = 1e-13;
+        if (std::abs(p[0]) < small_tol && std::abs(p[1]) > small_tol)
+            return Point<dim>(tau_0, 0, 0);
+        else if (std::abs(p[0]) > (1 - small_tol) && std::abs(p[1]) > small_tol)
+            return Point<dim>(-tau_0, 0, 0);
+        else if (std::abs(p[1]) < small_tol && std::abs(p[0]) > small_tol)
+            return Point<dim>(0, 0, 0);
+        else if (std::abs(p[1]) > (1 - small_tol) && std::abs(p[0]) > small_tol)
+            return Point<dim>(0, 0, 0);
+        else
+            return Point<dim>(0, 0, 0);
     };
 
     
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     boundary_functions[4] = &zero_function;
     boundary_functions[5] = &zero_function;
 
-    NeoHooke problem = NeoHooke("gds", r, boundary_functions, h, num_cells, C, lambda);
+    NeoHooke problem = NeoHooke(std::make_unique<MeshLoader<dim>>(), r, boundary_functions, h, num_cells, C, lambda);
     problem.setup();
     problem.solve();
     problem.output();
