@@ -1,18 +1,23 @@
 #ifndef MECHANICAL_DISPLACEMENT_HPP
 #define MECHANICAL_DISPLACEMENT_HPP
 
-#include <memory>
-
 #include <deal.II/lac/vector.h> // vector
 #include <deal.II/base/quadrature.h> // quadrature
 
 #include <deal.II/fe/fe_system.h> // fesystem
-#include <deal.II/grid/tria.h> // traingulation
+#include <deal.II/distributed/fully_distributed_tria.h> // distributed triangulation
 
 #include <deal.II/dofs/dof_handler.h> // dof handler
 
-#include <deal.II/lac/sparse_matrix.h> // sparse matrix
+#include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h> // sparsity pattern
+
+// ----------- MPI INCLUDES -------------
+#include <deal.II/base/conditional_ostream.h>
+
+// ----------- CPP INCLUDES ------------
+
+#include <memory>
 
 // TODO: understand why must use = 0 after virtual function
 
@@ -30,9 +35,11 @@ protected:
     const unsigned int r;
 
     // Neumann conditions
-    const std::function<Point<dim>(const Point<dim> &)> h;
-    
-    Triangulation<dim> mesh;
+    const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
+    const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
+
+    parallel::fullydistributed::Triangulation<dim> mesh;
+
     const unsigned int num_cells;
 
     // Finite Element System (USE FE_Q)
@@ -41,15 +48,41 @@ protected:
     // Quadratures
     std::unique_ptr<Quadrature<dim>> quadrature;
     std::unique_ptr<Quadrature<dim-1>> quadrature_boundary;
-
+    
+    // ------------ DOF STUFF ------------------
     DoFHandler<dim> dof_handler;
 
-    // Matrices
-    SparsityPattern sparsity_pattern;
-    SparseMatrix<double> jacobian_matrix;
-    Vector<double> residual_vector;
-    Vector<double> solution;
-    Vector<double> delta;
+    // DoFs owned by current process.
+    IndexSet locally_owned_dofs;
+
+    // DoFs relevant to the current process (including ghost DoFs).
+    IndexSet locally_relevant_dofs;
+
+    // -------- Matrices & Solution Vectors -----------
+
+    // Jacobian matrix.
+    TrilinosWrappers::SparseMatrix jacobian_matrix;
+
+    // Residual vector.
+    TrilinosWrappers::MPI::Vector residual_vector;
+
+    // Solution increment (without ghost elements).
+    TrilinosWrappers::MPI::Vector delta_owned;
+
+    // System solution (without ghost elements).
+    TrilinosWrappers::MPI::Vector solution_owned;
+
+    // System solution (including ghost elements).
+    TrilinosWrappers::MPI::Vector solution;
+
+    // ------------------ MPI STUFF ---------------------
+    // Number of MPI processes.
+    const unsigned int mpi_size;
+    // This MPI process.
+    const unsigned int mpi_rank;
+    // Parallel output stream.
+    ConditionalOStream pcout;
+
 
     virtual void assemble_system() = 0;
     virtual void solve_system() = 0;
@@ -59,13 +92,19 @@ public:
     MechanicalDisplacement(
         const std::string mesh_file_name_,
         const unsigned int &r_,
-        const std::function<Point<dim>(const Point<dim> &)> &h_,
+	const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
+        const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
 	const unsigned int num_cells_
     ):
+    mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
+    mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
+    pcout(std::cout, mpi_rank == 0),
     mesh_file_name(mesh_file_name_),
     r(r_),
-    h(h_),
-    num_cells(num_cells_)
+    neumann_conds(neum_funcs_),
+    dirichelet_conds(boundary_functions_),
+    num_cells(num_cells_),
+    mesh(MPI_COMM_WORLD)
     {}
     
     virtual void setup() = 0;

@@ -1,8 +1,10 @@
-#include <NeoHooke.hpp>
+#include "NeoHooke.hpp"
 
-int main(/*int argc, char *argv[]*/)
+int main(int argc, char *argv[])
 {
     using namespace pde;
+    Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
+
     const unsigned int dim = MechanicalDisplacement::dim;
     const unsigned int r = 1;
 
@@ -29,7 +31,14 @@ int main(/*int argc, char *argv[]*/)
 		return Point<dim>(0, 0, 0);
     };
 
-    NeoHooke problem = NeoHooke("gds", r, C, lambda, h, num_cells);
+    
+    std::map<types::boundary_id, const Function<dim> *> boundary_functions;
+    Functions::ZeroFunction<dim> zero_function(dim);
+
+    boundary_functions[4] = &zero_function;
+    boundary_functions[5] = &zero_function;
+
+    NeoHooke problem = NeoHooke("gds", r, boundary_functions, h, num_cells, C, lambda);
     problem.setup();
     problem.solve();
     problem.output();

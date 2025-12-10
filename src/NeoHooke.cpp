@@ -1,6 +1,8 @@
 #include "NeoHooke.hpp"
 
+// --------- DEALII HEADERS ----------
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_tools.h>
 
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_values.h>
@@ -8,29 +10,29 @@
 
 #include <deal.II/dofs/dof_tools.h>
 
-#include <deal.II/lac/dynamic_sparsity_pattern.h>
-
 #include <deal.II/lac/solver_control.h>
 #include <deal.II/lac/solver_gmres.h>
-#include <deal.II/lac/precondition.h>
+#include <deal.II/lac/trilinos_precondition.h>
 
 #include <deal.II/base/tensor.h>
 
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
-#include <deal.II/lac/solver_bicgstab.h>
 
-#include <filesystem>
-#include <iostream>
-#include <fstream>
 #include <deal.II/numerics/data_out.h>
+
+// ------------ CPP HEADERS ----------
+#include <filesystem>
+#include <fstream>
 
 #define GAMBA_DEBUG false
 
 using namespace pde;
 
 void NeoHooke::setup() {
-    std::cout << "===============================" << std::endl;
+
+    // TODO: Read from mesh
+    pcout << "===============================" << std::endl;
     
     // Create the mesh
     {
@@ -53,36 +55,51 @@ void NeoHooke::setup() {
 	*   *-------*        *-------*
 	* 
 	*/
-	std::cout << "Initializing the mesh" << std::endl;
-	GridGenerator::subdivided_hyper_cube(mesh, num_cells, 0.0, 1.0, true);
-	std::cout << "Number of elements = " << mesh.n_active_cells()
+	pcout << "Initializing the mesh" << std::endl;
+	Triangulation<dim> mesh_serial;
+	GridGenerator::subdivided_hyper_cube(mesh_serial, num_cells, 0.0, 1.0, true);
+	pcout << "Number of elements = " << mesh.n_active_cells()
 		  << std::endl;
+
+	// Then, we copy the triangulation into the parallel one.
+	{
+	    GridTools::partition_triangulation(mpi_size, mesh_serial);
+	    const auto construction_data = TriangulationDescription::Utilities::create_description_from_triangulation(mesh_serial, MPI_COMM_WORLD);
+	    mesh.create_triangulation(construction_data);
+	}
+
+	// Notice that we write here the number of *global* active cells (across all
+	// processes).
+	pcout << "  Number of elements = " << mesh.n_global_active_cells() << std::endl;
+
     }
 
-    std::cout << "------------------------------------" << std::endl;
+    pcout << "------------------------------------" << std::endl;
 
     // Initialize the finite element space
     {
 	// TODO: Check that this Finite Element Space suffices
+	pcout << "Initializing the finite element space" << std::endl;
+
 	fe = std::make_unique<FESystem<dim>>(FE_Q<dim>(r)^dim);
 
-	std::cout << "  Degree                     = " << fe->degree << std::endl;
-	std::cout << "  DoFs per cell              = " << fe->dofs_per_cell
+	pcout << "  Degree                     = " << fe->degree << std::endl;
+	pcout << "  DoFs per cell              = " << fe->dofs_per_cell
 		  << std::endl;
 
 	// TODO: Check that these quadrature are correct enough
-	quadrature = std::make_unique<QGauss<dim>>(r + 1);
-	quadrature_boundary = std::make_unique<QGauss<dim - 1>>(r + 1);
+	quadrature 		= std::make_unique<QGauss<dim>>(r + 1);
+	quadrature_boundary 	= std::make_unique<QGauss<dim - 1>>(r + 1);
 
-	std::cout << "  Quadrature points per cell = " << quadrature->size()
+	pcout << "  Quadrature points per cell = " << quadrature->size()
 	  << std::endl;
     }
 
-    std::cout << "----------------------------------" << std::endl;
+    pcout << "----------------------------------" << std::endl;
 
     // Initialize the DoF handler.
     {
-	std::cout << "Initializing the DoF handler" << std::endl;
+	pcout << "Initializing the DoF handler" << std::endl;
 
 	// Initialize the DoF handler with the mesh we constructed.
 	dof_handler.reinit(mesh);
@@ -92,30 +109,43 @@ void NeoHooke::setup() {
 	// they are collocated, their "global indices", ...).
 	dof_handler.distribute_dofs(*fe);
 
-	std::cout << "  Number of DoFs = " << dof_handler.n_dofs() << std::endl;
+	// We retrieve the set of locally owned DoFs, which will be useful when
+	// initializing linear algebra classes.
+	locally_owned_dofs = dof_handler.locally_owned_dofs();
+	locally_relevant_dofs = DoFTools::extract_locally_relevant_dofs(dof_handler);
+
+	pcout << "  Number of DoFs = " << dof_handler.n_dofs() << std::endl;
     }
 
-    std::cout << "-----------------------------------------------" << std::endl;
+    pcout << "-----------------------------------------------" << std::endl;
 
     // Initialize the linear system.
     {
-	std::cout << "Initializing the linear system" << std::endl;
+	pcout << "Initializing the linear system" << std::endl;
 
-	std::cout << "  Initializing the sparsity pattern" << std::endl;
-	DynamicSparsityPattern dsp(dof_handler.n_dofs());
-	DoFTools::make_sparsity_pattern(dof_handler, dsp);
-	sparsity_pattern.copy_from(dsp);
+	pcout << "  Initializing the sparsity pattern" << std::endl;
+
+	// To initialize the sparsity pattern, we use Trilinos' class, that manages
+	// some of the inter-process communication.
+	TrilinosWrappers::SparsityPattern sparsity_pattern(locally_owned_dofs, MPI_COMM_WORLD);
+	DoFTools::make_sparsity_pattern(dof_handler, sparsity_pattern);
+
+	// After initialization, we need to call compress, so that all process
+	// retrieve the information they need for the rows they own (i.e. the rows
+	// corresponding to locally owned DoFs).
+	sparsity_pattern.compress();
 
 	// Then, we use the sparsity pattern to initialize the system matrix
-	std::cout << "  Initializing the system matrix" << std::endl;
+	pcout << "  Initializing the system matrix" << std::endl;
 	jacobian_matrix.reinit(sparsity_pattern);
 
 	// Finally, we initialize the right-hand side and solution vectors.
-	std::cout << "  Initializing the system right-hand side" << std::endl;
-	residual_vector.reinit(dof_handler.n_dofs());
-	std::cout << "  Initializing the solution vector" << std::endl;
-	solution.reinit(dof_handler.n_dofs());
-	delta.reinit(dof_handler.n_dofs());
+	pcout << "  Initializing the system right-hand side" << std::endl;
+	residual_vector.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+	pcout << "  Initializing the solution vector" << std::endl;
+	solution_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+	solution.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+	delta_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
     } 
 }
 
@@ -171,9 +201,9 @@ void NeoHooke::assemble_system() {
 
 	#if GAMBA_DEBUG
 	for ( const unsigned int q : fe_values.quadrature_point_indices() ) {
-		std::cout << "fe_values[displacement].get_function_values " << 
+		pcout << "fe_values[displacement].get_function_values " << 
 		    solution_loc[q] << std::endl;
-		std::cout << "fe_values[displacement].get_function_gradients " << 
+		pcout << "fe_values[displacement].get_function_gradients " << 
 		   solution_gradient_loc[q] << std::endl;
 	}
 	#endif
@@ -204,13 +234,11 @@ void NeoHooke::assemble_system() {
 
 		    //Add two additional terms arrising when lambda =/= 0
 		    
-		    //TODO: validate this is lambda * (grad(delta):F^{-T} * F^{-T}:grad(v))
 		    cell_matrix(i,j) += lambda * (
 			double_contract<0,0,1,1>(phi_j_grad, inverse_transpose_displacement) * 
 			double_contract<0,0,1,1>(inverse_transpose_displacement , phi_i_grad)
 			) * fe_values.JxW(q);
 
-		    //TODO: validate this is -lambda * ln(J) * (F^{-T} * grad(delta)^{T} * F^{-T}):grad(v)
 		    //Is the std log relly the best here?
 		    cell_matrix(i,j) -= lambda * std::log(determinant_displacement) *
 			double_contract<0,0,1,1>(second_member,phi_i_grad)
@@ -254,12 +282,12 @@ void NeoHooke::assemble_system() {
 		    for (unsigned int i = 0; i < dofs_per_cell; ++i) {
 
 			#if GAMBA_DEBUG
-			    std::cout << "Point(q) " << fe_values_boundary.quadrature_point(q)  << std::endl;
-			    std::cout << "fe_values_boundary[displacement].value(i, q) " << fe_values_boundary[displacement].value(i, q) << std::endl;
+			    pcout << "Point(q) " << fe_values_boundary.quadrature_point(q)  << std::endl;
+			    pcout << "fe_values_boundary[displacement].value(i, q) " << fe_values_boundary[displacement].value(i, q) << std::endl;
 			#endif
 
 			cell_rhs(i) +=
-			h(fe_values_boundary.quadrature_point(q)) *
+			neumann_conds(fe_values_boundary.quadrature_point(q)) *
 			fe_values_boundary[displacement].value(i, q) *     
 			fe_values_boundary.JxW(q);
 		    }
@@ -275,47 +303,44 @@ void NeoHooke::assemble_system() {
 	jacobian_matrix.add(dof_indices, cell_matrix);
 	residual_vector.add(dof_indices, cell_rhs);
     }
+
+    // Synchronize matrix and residual vector values
+    jacobian_matrix.compress(VectorOperation::add);
+    residual_vector.compress(VectorOperation::add);
     
     #if GAMBA_DEBUG
-	std::cout << "system_rhs " << residual_vector << std::endl;
+	pcout << "system_rhs " << residual_vector << std::endl;
     #endif
 
-    // TODO: add dirichelet boundary conditions
 
     {
 	std::map<types::global_dof_index, double> boundary_values;
 
-	std::map<types::boundary_id, const Function<dim> *> boundary_functions;
-	Functions::ZeroFunction<dim>                        zero_function(dim);
-
-	boundary_functions[4] = &zero_function;
-	boundary_functions[5] = &zero_function;
-
 	VectorTools::interpolate_boundary_values(dof_handler,
-				 boundary_functions,
+				 dirichelet_conds,
 				 boundary_values);
 
-	MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta, residual_vector);
+	MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
     }
 }
 
 void NeoHooke::solve_system() {
-    // TODO: Change number of iterations
-    SolverControl solver_control(2000, 1e-6 * residual_vector.l2_norm());
 
-    SolverGMRES<Vector<double>> solver(solver_control);
+    SolverControl solver_control(1000, 1e-6 * residual_vector.l2_norm());
+
+    SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
     
-    PreconditionSOR preconditioner;
+    TrilinosWrappers::PreconditionSOR preconditioner;
     preconditioner.initialize(jacobian_matrix);
 
-    solver.solve(jacobian_matrix, delta, residual_vector, preconditioner);
-    std::cout << "   " << solver_control.last_step() << " GMRES iterations"
+    solver.solve(jacobian_matrix, delta_owned, residual_vector, preconditioner);
+    pcout << "   " << solver_control.last_step() << " GMRES iterations"
     << std::endl;
 
 }
 
 void NeoHooke::solve() {
-    std::cout << "===============================================" << std::endl;
+    pcout << "===============================================" << std::endl;
 
     const unsigned int n_max_iters        = 1000;
     const double       residual_tolerance = 1e-6;
@@ -328,7 +353,7 @@ void NeoHooke::solve() {
 	assemble_system();
 	residual_norm = residual_vector.l2_norm();
 
-	std::cout << "Newton iteration " << n_iter << "/" << n_max_iters
+	pcout << "Newton iteration " << n_iter << "/" << n_max_iters
 	<< " - ||r|| = " << std::scientific << std::setprecision(6)
 	<< residual_norm << std::flush;
 
@@ -337,17 +362,18 @@ void NeoHooke::solve() {
 	if (residual_norm <= residual_tolerance) break;
 
 	solve_system();
-	solution += delta;
+	solution_owned += delta_owned;
+	solution = solution_owned;
 
 	++n_iter;
     }
 
-    std::cout << " < tolerance" << std::endl;
-    std::cout << "===============================================" << std::endl;
+    pcout << " < tolerance" << std::endl;
+    pcout << "===============================================" << std::endl;
 }
 
 void NeoHooke::output() const {
-    std::cout << "===============================================" << std::endl;
+    pcout << "===============================================" << std::endl;
 
     std::vector<std::string> solution_names(dim, "displacement");
 
@@ -358,17 +384,29 @@ void NeoHooke::output() const {
     DataOut<dim> data_out;
     data_out.attach_dof_handler(dof_handler);
     data_out.add_data_vector(dof_handler, solution, solution_names, data_component_interpretation);
+
+    // Partitioning data in order to write in parallel
+    std::vector<unsigned int> partition_int(mesh.n_active_cells());
+    GridTools::get_subdomain_association(mesh, partition_int);
+    const Vector<double> partitioning(partition_int.begin(), partition_int.end());
+    data_out.add_data_vector(partitioning, "partitioning");
+
     data_out.build_patches();
 
     // Use std::filesystem to construct the output file name based on the
     // mesh file name.
     const std::filesystem::path mesh_path(mesh_file_name);
     const std::string           output_file_name =
-    "output-" + mesh_path.stem().string() + ".vtk";
-    std::ofstream output_file(output_file_name);
-    data_out.write_vtk(output_file);
+    "output-" + mesh_path.stem().string();
 
-    std::cout << "Output written to " << output_file_name << std::endl;
+    // Finally, we need to write in a format that supports parallel output. This
+    // can be achieved in multiple ways (e.g. XDMF/H5). We choose VTU/PVTU files.
+    data_out.write_vtu_with_pvtu_record(/* folder = */ "./",
+				      /* basename = */ output_file_name,
+				      /* index = */ 0,
+				      MPI_COMM_WORLD);
 
-    std::cout << "===============================================" << std::endl;
+    pcout << "Output written to " << output_file_name << std::endl;
+
+    pcout << "===============================================" << std::endl;
 }
