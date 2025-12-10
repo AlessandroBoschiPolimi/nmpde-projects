@@ -40,3 +40,13 @@ Alternatively, to generate a Visual Studio solution under the build folder
 	cmake -S . -B build -G "Visual Studio 17 2022"
 
 As above, it's possible to specify the dealii path directly in the cmake command.
+
+## Mesh Generation
+
+To create the mesh run the following command outside the container
+
+	gmsh scripts/mesh_ellipse.geo -3 -o mesh/mesh.msh
+
+It requires gmsh installed
+
+	sudo apt install gmsh
