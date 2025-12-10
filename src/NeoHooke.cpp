@@ -145,7 +145,7 @@ void NeoHooke::assemble_system() {
     std::vector<types::global_cell_index> dof_indices(dofs_per_cell);
 
     jacobian_matrix = 0.0;
-    residual_vector 	  = 0.0;
+    residual_vector = 0.0;
 
     std::vector<Tensor<1,dim, double>>	solution_loc(n_q);
     std::vector<Tensor<2,dim, double>>	solution_gradient_loc(n_q);
@@ -183,16 +183,17 @@ void NeoHooke::assemble_system() {
 		// base to describe v
 		const Tensor<2,dim> phi_i_grad = fe_values[displacement].gradient(i, q);
 
+		// Compute the displacement tensor I + grad(d(k)) at quadr point q
 		Tensor<2,dim> displacement_tensor({{1,0,0},{0,1,0},{0,0,1}});
 		displacement_tensor += solution_gradient_loc[q];
-		const Tensor<2,dim> inverse_displacement = transpose(invert(displacement_tensor));
+		const Tensor<2,dim> inverse_transpose_displacement = transpose(invert(displacement_tensor));
 		//Compute determinant of the displacement tensor F
 		//I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
 		const double determinant_displacement = std::abs(determinant(displacement_tensor));
 		for ( const unsigned j : fe_values.dof_indices() ) {
 		    // base to describe delta
 		    const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
-		    const Tensor<2,dim> second_member = inverse_displacement * transpose(phi_j_grad) * inverse_displacement;
+		    const Tensor<2,dim> second_member = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
 
 		    // TODO: check correctness of the following multiplication
 		    // and if there is an overloaded operator to do it
@@ -205,26 +206,27 @@ void NeoHooke::assemble_system() {
 		    
 		    //TODO: validate this is lambda * (grad(delta):F^{-T} * F^{-T}:grad(v))
 		    cell_matrix(i,j) += lambda * (
-			double_contract<0,0,1,1>(phi_j_grad, inverse_displacement) * 
-			double_contract<0,0,1,1>(inverse_displacement , phi_i_grad)
+			double_contract<0,0,1,1>(phi_j_grad, inverse_transpose_displacement) * 
+			double_contract<0,0,1,1>(inverse_transpose_displacement , phi_i_grad)
 			) * fe_values.JxW(q);
 
 		    //TODO: validate this is -lambda * ln(J) * (F^{-T} * grad(delta)^{T} * F^{-T}):grad(v)
 		    //Is the std log relly the best here?
-		    cell_matrix(i,j) -= lambda * std::log(determinant_displacement) * (
+		    cell_matrix(i,j) -= lambda * std::log(determinant_displacement) *
 			double_contract<0,0,1,1>(second_member,phi_i_grad)
-			) * fe_values.JxW(q);
+			* fe_values.JxW(q);
 
 
 		}
 
 		cell_rhs(i) -= mu * (
 		    double_contract<0,0,1,1>(displacement_tensor, phi_i_grad) -
-		    double_contract<0,0,1,1>(inverse_displacement, phi_i_grad)
+		    double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
 		) * fe_values.JxW(q);
+
 		//We also have to add the part with lambda to the right side
 		cell_rhs(i) -= lambda * std::log(determinant_displacement) * (
-		    double_contract<0,0,1,1>(inverse_displacement, phi_i_grad)
+		    double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
 		) * fe_values.JxW(q);
 
 	    }
