@@ -1,4 +1,4 @@
-#include "NeoHooke.hpp"
+#include "Guccione.hpp"
 
 // --------- DEALII HEADERS ----------
 #include <deal.II/grid/grid_generator.h>
@@ -33,7 +33,7 @@
 
 using namespace pde;
 
-void NeoHooke::setup() {
+void Guccione::setup() {
 
     // TODO: Read from mesh
     pcout << "===============================" << std::endl;
@@ -125,7 +125,7 @@ void NeoHooke::setup() {
 }
 
 
-void NeoHooke::assemble_system() {
+void Guccione::assemble_system() {
     const unsigned int dofs_per_cell	= fe->dofs_per_cell;
     const unsigned int n_q		= quadrature->size();
 
@@ -185,27 +185,50 @@ void NeoHooke::assemble_system() {
 		for ( const unsigned int q : fe_values.quadrature_point_indices() ) {
             // evaluate anisotropic function
             const std::array<Point<dim>,dim> fns = aniso_fun(fe_values.quadrature_point(q));
-			
-            Tensor<2,dim> F({{1,0,0},{0,1,0},{0,0,1}});
-			F += solution_gradient_loc[q];
+	    //Get a unit matrix, cause we will need it
+            Tensor<2,dim> I({{1,0,0},{0,1,0},{0,0,1}});
+	    //Build the deformation gradient
+	    Tensor<2,dim> F = I + solution_gradient_loc[q];
             // build E
-            Tensor<2, dim> E = 0.5 * (F*transpose(F) - )
+            Tensor<2, dim> E = 0.5 * (F*transpose(F) - I);
             // build D and B
             Tensor<4, dim> D;
             Tensor<2, dim> B;
-            Tensor<2, dim> P;
             for (unsigned int aniso_vect_1 = 0; aniso_vect_1 < dim; ++aniso_vect_1) {
                 auto m = fns[aniso_vect_1];
                 for (unsigned int aniso_vect_2 = 0; aniso_vect_2 < dim; ++aniso_vect_2) {
                     auto n = fns[aniso_vect_2];
-                    const double b = param_b(aniso_vect_1 * dim + aniso_vect_2);
-                    for () {
-                    
+                    const double b = param_b[aniso_vect_1 * dim + aniso_vect_2];
+                    for (unsigned int i = 0; i< dim; i++) {
+                    	for (unsigned int j = 0; j< dim; j++) {
+				B[i][j] += 2 * b * ((E * m) * n) * m[i] * n[j];
+                    		for (unsigned int k = 0; k< dim; l++) {
+                    			for (unsigned int l = 0; l< dim; l++) {
+						D[k][l][i][j] += 2 * b * m[i] * n[j] * m[k] * n[l];
+					}
+				}
+			}
                     }
                 }
             }
             // build P
+            Tensor<2, dim> P;
+	    for (unsigned int k = 0; k < dim; ++k){
+	    	for (unsigned int l = 0; l < dim; ++l){
+	    		for (unsigned int n = 0; i < dim; ++i)
+				P[k][l] += param_c / 4 * std::exp(Q) * F[n][l](B[n][i] + B[i][n]);
+		}
+	    }
             // compute Q
+	    double Q = 0;
+            for (unsigned int aniso_vect_1 = 0; aniso_vect_1 < dim; ++aniso_vect_1) {
+                auto m = fns[aniso_vect_1];
+                for (unsigned int aniso_vect_2 = 0; aniso_vect_2 < dim; ++aniso_vect_2) {
+                    auto n = fns[aniso_vect_2];
+                    const double b = param_b[aniso_vect_1 * dim + aniso_vect_2];
+		    Q += b * std::pow((E * m) * n, 2);
+		}
+	    }
             // compute dP/dF
 	    Tensor<4, dim> dPdF;
 	    for (unsigned int k = 0; k < dim; ++k){
@@ -232,17 +255,12 @@ void NeoHooke::assemble_system() {
 			for ( const unsigned int i : fe_values.dof_indices() ) {
 			// base to describe v
 			const Tensor<2,dim> phi_i_grad = fe_values[displacement].gradient(i, q);
-
-			// Compute the displacement tensor I + grad(d(k)) at quadr point q
-			const Tensor<2,dim> inverse_transpose_displacement = transpose(invert(displacement_tensor));
-			//Compute determinant of the displacement tensor F
-			//I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
-			const double determinant_displacement = std::abs(determinant(displacement_tensor));
 			for ( const unsigned j : fe_values.dof_indices() ) {
 				// base to describe delta
 				const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
 				//TODO:Check the signs
 				//(dPdF:grad(delta)):grad(v)
+				//* operator here does sum_ijkl A_{ijkl}B_{kl}
 				cell_matrix(i, j) = += double_contract<0,0,1,1>(dPdF * phi_j_grad, phi_i_grad);
 			}
 
@@ -312,7 +330,7 @@ void NeoHooke::assemble_system() {
     }
 }
 
-void NeoHooke::solve_system() {
+void Guccione::solve_system() {
 
     SolverControl solver_control(1000, 1e-6 * residual_vector.l2_norm());
 
@@ -326,7 +344,7 @@ void NeoHooke::solve_system() {
     	<< std::endl;
 }
 
-void NeoHooke::solve() {
+void Guccione::solve() {
     pcout << "===============================================" << std::endl;
 
     const unsigned int n_max_iters        = 1000;
@@ -359,7 +377,7 @@ void NeoHooke::solve() {
     pcout << "===============================================" << std::endl;
 }
 
-void NeoHooke::output() const {
+void Guccione::output() const {
     pcout << "===============================================" << std::endl;
 
     std::vector<std::string> solution_names(dim, "displacement");
