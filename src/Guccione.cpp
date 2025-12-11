@@ -207,6 +207,28 @@ void NeoHooke::assemble_system() {
             // build P
             // compute Q
             // compute dP/dF
+	    Tensor<4, dim> dPdF;
+	    for (unsigned int k = 0; k < dim; ++k){
+	    	for (unsigned int l = 0; l < dim; ++l){
+	    		for (unsigned int i = 0; i < dim; ++i){
+	    			for (unsigned int j = 0; j < dim; ++j){
+	    				if (l == j){
+						dPdF[k][l][i][j] += param_c / 4 * std::exp(Q) *
+							(B[k][i] + B[i][k]);
+					}
+					for (unsigned int n = 0; n < dim; ++n)
+	    					dPdF[k][l][i][j] += 1 / 2 * P[k][l]*{
+						F[n][j] * (B[i][n] + B[n][i]);
+						for (unsigned int a = 0; a < dim; ++a)
+							dPdF[k][l][i][j] += param_c / 8 * std::exp(Q) *
+								F[n][l] * F[a][j] *
+								(D[i][a][k][n] + D[a][i][k][n] +
+								D[i][a][n][k] + D[a][i][n][k]);
+					}
+				}
+			}
+		}
+	    }
 			for ( const unsigned int i : fe_values.dof_indices() ) {
 			// base to describe v
 			const Tensor<2,dim> phi_i_grad = fe_values[displacement].gradient(i, q);
@@ -219,38 +241,12 @@ void NeoHooke::assemble_system() {
 			for ( const unsigned j : fe_values.dof_indices() ) {
 				// base to describe delta
 				const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
-				const Tensor<2,dim> second_member = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
-
-				// TODO: check correctness of the following multiplication
-				// and if there is an overloaded operator to do it
-				cell_matrix(i,j) += mu * (
-						double_contract<0,0,1,1>(phi_j_grad, phi_i_grad) + 
-						double_contract<0,0,1,1>(second_member , phi_i_grad)
-					) * fe_values.JxW(q);
-
-				//Add two additional terms arrising when lambda =/= 0
-				
-				cell_matrix(i,j) += lambda * (
-						double_contract<0,0,1,1>(phi_j_grad, inverse_transpose_displacement) * 
-						double_contract<0,0,1,1>(inverse_transpose_displacement , phi_i_grad)
-					) * fe_values.JxW(q);
-
-				//Is the std log relly the best here?
-				cell_matrix(i,j) -= lambda * std::log(determinant_displacement) *
-					double_contract<0,0,1,1>(second_member,phi_i_grad)
-					* fe_values.JxW(q);
+				//TODO:Check the signs
+				//(dPdF:grad(delta)):grad(v)
+				cell_matrix(i, j) = += double_contract<0,0,1,1>(dPdF * phi_j_grad, phi_i_grad);
 			}
 
-			cell_rhs(i) -= mu * (
-					double_contract<0,0,1,1>(displacement_tensor, phi_i_grad) -
-					double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
-				) * fe_values.JxW(q);
-
-			//We also have to add the part with lambda to the right side
-			cell_rhs(i) -= lambda * std::log(determinant_displacement) * (
-					double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
-				) * fe_values.JxW(q);
-			}
+			cell_rhs(i) -= double_contract<0,0,1,1>(P, phi_i_grad);
 		}
 		
 		if (cell->at_boundary()) {
