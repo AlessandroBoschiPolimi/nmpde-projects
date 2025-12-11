@@ -202,7 +202,7 @@ void Guccione::assemble_system() {
                     for (unsigned int i = 0; i< dim; i++) {
                     	for (unsigned int j = 0; j< dim; j++) {
 				B[i][j] += 2 * b * ((E * m) * n) * m[i] * n[j];
-                    		for (unsigned int k = 0; k< dim; l++) {
+                    		for (unsigned int k = 0; k< dim; k++) {
                     			for (unsigned int l = 0; l< dim; l++) {
 						D[k][l][i][j] += 2 * b * m[i] * n[j] * m[k] * n[l];
 					}
@@ -211,15 +211,7 @@ void Guccione::assemble_system() {
                     }
                 }
             }
-            // build P
-            Tensor<2, dim> P;
-	    for (unsigned int k = 0; k < dim; ++k){
-	    	for (unsigned int l = 0; l < dim; ++l){
-	    		for (unsigned int n = 0; i < dim; ++i)
-				P[k][l] += param_c / 4 * std::exp(Q) * F[n][l](B[n][i] + B[i][n]);
-		}
-	    }
-            // compute Q
+	    // compute Q
 	    double Q = 0;
             for (unsigned int aniso_vect_1 = 0; aniso_vect_1 < dim; ++aniso_vect_1) {
                 auto m = fns[aniso_vect_1];
@@ -229,6 +221,15 @@ void Guccione::assemble_system() {
 		    Q += b * std::pow((E * m) * n, 2);
 		}
 	    }
+            // build P
+            Tensor<2, dim> P;
+	    for (unsigned int k = 0; k < dim; ++k){
+	    	for (unsigned int l = 0; l < dim; ++l){
+	    		for (unsigned int n = 0; n < dim; ++n)
+				P[k][l] += param_c / 4 * std::exp(Q) * F[n][l] * (B[n][k] + B[k][n]);
+		}
+	    }
+            
             // compute dP/dF
 	    Tensor<4, dim> dPdF;
 	    for (unsigned int k = 0; k < dim; ++k){
@@ -239,8 +240,8 @@ void Guccione::assemble_system() {
 						dPdF[k][l][i][j] += param_c / 4 * std::exp(Q) *
 							(B[k][i] + B[i][k]);
 					}
-					for (unsigned int n = 0; n < dim; ++n)
-	    					dPdF[k][l][i][j] += 1 / 2 * P[k][l]*{
+					for (unsigned int n = 0; n < dim; ++n){
+	    					dPdF[k][l][i][j] += 1 / 2 * P[k][l]*
 						F[n][j] * (B[i][n] + B[n][i]);
 						for (unsigned int a = 0; a < dim; ++a)
 							dPdF[k][l][i][j] += param_c / 8 * std::exp(Q) *
@@ -260,11 +261,13 @@ void Guccione::assemble_system() {
 				const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
 				//TODO:Check the signs
 				//(dPdF:grad(delta)):grad(v)
-				//* operator here does sum_ijkl A_{ijkl}B_{kl}
-				cell_matrix(i, j) = += double_contract<0,0,1,1>(dPdF * phi_j_grad, phi_i_grad);
+				//TODO: Does this contract the last two indeces? Is the inermediate right?
+				Tensor<2, dim> intermediate = double_contract<0,0,1,1>(dPdF, phi_j_grad);
+				cell_matrix(i, j) += double_contract<0,0,1,1>(intermediate, phi_i_grad);
 			}
 
 			cell_rhs(i) -= double_contract<0,0,1,1>(P, phi_i_grad);
+			}
 		}
 		
 		if (cell->at_boundary()) {
