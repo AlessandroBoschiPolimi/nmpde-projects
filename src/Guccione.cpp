@@ -64,8 +64,8 @@ void Guccione::setup() {
 			<< std::endl;
 
 		// TODO: Check that these quadrature are correct enough
-		quadrature = std::make_unique<QGauss<dim>>(r + 1);
-		quadrature_boundary = std::make_unique<QGauss<dim - 1>>(r + 1);
+		quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
+		quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
 
 		pcout << "  Quadrature points per cell = " << quadrature->size() << std::endl;
     }
