@@ -10,6 +10,31 @@ forcing_term=0
 # PARALLEL STUFF
 threads_num=1
 
+
+help() {
+
+	cat <<- EOF
+	Usage: 
+	  ./simulate.sh [FLAGS <arg>]
+	
+	Options:
+	  -M <mesh_type>	Choose a mesh type
+	  -N <neumann_func>	Choose a neumann function to execute
+	  -n <num_threads>	Number of threads to use
+	  -F <0|1>		Choose whether to activate the forcing term (rod_bend)
+	
+	Mesh Types:
+	  cube | rod | cup
+	
+	Neumann Funtions:
+	Cube:
+	  cube_pull
+	Rod:
+	Cup:
+	EOF
+
+}
+
 parse_arguments() {
 	raw_opts="$@"
 	parse_state=0
@@ -19,6 +44,7 @@ parse_arguments() {
 				case $opt in
 					# Help
 					-h | --help)
+						help
 						exit 0;;
 					# Select Mesh
 					-M)
