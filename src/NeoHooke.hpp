@@ -17,11 +17,12 @@ public:
         const unsigned int &r_,
 	const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
         const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-	const unsigned int num_cells_,
+	const std::function<double (const FEValues<dim>& fe_values, const FEValuesExtractors::Vector& displacement, 
+			     const unsigned int base_idx, const unsigned int quadrature_point)> forcing_term_,
 	const double mu_,
     	const double lambda_
     ) :
-        MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_,  num_cells_),
+        MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_, forcing_term_),
         mu(mu_),
         lambda(lambda_)
     {}

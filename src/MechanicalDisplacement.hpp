@@ -21,16 +21,16 @@
 
 #include "MeshGenerator.hpp"
 
-// TODO: understand why must use = 0 after virtual function
-
 namespace pde {
+
+static constexpr unsigned int dim = 3;
+using ForcingTermType = std::function<double (const FEValues<dim>& fe_values, const FEValuesExtractors::Vector& displacement,
+	const unsigned int base_idx, const unsigned int quadrature_point)>;
 
 using namespace dealii;
 
 class MechanicalDisplacement
 {
-public:
-    static constexpr unsigned int dim = 3;
 
 protected:
     const std::unique_ptr<MeshGenerator<dim>> mesh_generator;
@@ -39,10 +39,9 @@ protected:
     // Neumann conditions
     const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
     const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
+    const ForcingTermType forcing_term;
 
     parallel::fullydistributed::Triangulation<dim> mesh;
-
-    const unsigned int num_cells;
 
     // Finite Element System (USE FE_Q)
     std::unique_ptr<FESystem<dim>> fe;
@@ -96,14 +95,14 @@ public:
             const unsigned int &r_,
             const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
             const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-            const unsigned int num_cells_
+	    const ForcingTermType &forcing_term_
         ) :
         mesh_generator(std::move(mesh_generator_)),
         r(r_),
         neumann_conds(neum_funcs_),
         dirichelet_conds(boundary_functions_),
+	forcing_term(forcing_term_),
 	mesh(MPI_COMM_WORLD),
-        num_cells(num_cells_),
         mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
         mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
 	pcout(std::cout, mpi_rank == 0)        

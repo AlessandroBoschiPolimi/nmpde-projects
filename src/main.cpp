@@ -1,41 +1,46 @@
 #include "NeoHooke.hpp"
 #include "Guccione.hpp"
-#include "TestFunctions.hpp"
+#include "TestConditions.hpp"
+
+
+const pde::ForcingTermType select_forcing_term(std::string boolean_value) {
+	using namespace pde::TestForcingFunctions;
+	return std::stoi(boolean_value) ? bend_rod : null_forcing_term;
+}
 
 int main(int argc, char *argv[])
 {
     using namespace pde;
     Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
-
-    const unsigned int dim = MechanicalDisplacement::dim;
+	
+    // Initializing arguments
+    const std::string mesh_choice = std::string(argv[1]);
+    const std::string neumann_func = std::string(argv[2]);
+    const std::string forcing_func = std::string(argv[3]);
 
     const unsigned int r = 1;
-
     //Material constant
     const double C = 1; //Pa
     const double lambda = 2; //Pa
-    //Number of cells inside a hypercube
-    const unsigned int num_cells = 10;
 
     // ---------- INITIALIZE NEUMANN FUNCTION --------------
-    TestFunctions::initialize();
+    TestNeumannConditions::initialize();
     // ----------- CHOOSE NEUMANN FUNCTION ----------------
-    const auto h  = TestFunctions::choose_neumann_function(argv[2]);
+    const auto h  = TestNeumannConditions::choose_neumann_function(neumann_func);
 
 
     std::map<types::boundary_id, const Function<dim> *> boundary_functions;
     Functions::ZeroFunction<dim> zero_function(dim);
 
-    
-    // TODO: fix this
+    const auto forcing_term = select_forcing_term(forcing_func);
 
     std::unique_ptr<MechanicalDisplacement> problem;
 
-    if(std::string(argv[1]) == "cube") {
+    if(mesh_choice == "cube") {
 	boundary_functions[4] = &zero_function;
 	boundary_functions[5] = &zero_function;
 	problem = std::make_unique<NeoHooke>(
-	    std::make_unique<CubeGenerator<dim>>(), r, boundary_functions, h, num_cells, C, lambda
+	    std::make_unique<CubeGenerator<dim>>(), r, boundary_functions, h, forcing_term, C, lambda
 	);
     } else {
 	// Setting left and right to be still
@@ -43,7 +48,7 @@ int main(int argc, char *argv[])
 	boundary_functions[RodGenerator<dim>::right_id] = &zero_function;
 
 	problem = std::make_unique<NeoHooke>(
-	    std::make_unique<RodGenerator<dim>>(), r, boundary_functions, h, num_cells, C, lambda
+	    std::make_unique<RodGenerator<dim>>(), r, boundary_functions, h, forcing_term, C, lambda
 	);
     }
 
