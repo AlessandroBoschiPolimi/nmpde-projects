@@ -98,15 +98,15 @@ public:
             const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
             const unsigned int num_cells_
         ) :
-        mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
-        mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
-        pcout(std::cout, mpi_rank == 0),
         mesh_generator(std::move(mesh_generator_)),
         r(r_),
         neumann_conds(neum_funcs_),
         dirichelet_conds(boundary_functions_),
+	mesh(MPI_COMM_WORLD),
         num_cells(num_cells_),
-        mesh(MPI_COMM_WORLD)
+        mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
+        mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
+	pcout(std::cout, mpi_rank == 0)        
     {}
     
     virtual void setup() = 0;

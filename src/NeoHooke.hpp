@@ -15,10 +15,10 @@ public:
     NeoHooke(
         std::unique_ptr<MeshGenerator<dim>> mesh_generator_,
         const unsigned int &r_,
-	    const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
+	const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
         const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-	    const unsigned int num_cells_,
-	    const double mu_,
+	const unsigned int num_cells_,
+	const double mu_,
     	const double lambda_
     ) :
         MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_,  num_cells_),

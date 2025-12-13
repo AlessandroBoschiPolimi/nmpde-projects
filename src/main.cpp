@@ -20,18 +20,35 @@ int main(int argc, char *argv[])
     // ---------- INITIALIZE NEUMANN FUNCTION --------------
     TestFunctions::initialize();
     // ----------- CHOOSE NEUMANN FUNCTION ----------------
-    const auto h  = TestFunctions::choose_neumann_function("");
+    const auto h  = TestFunctions::choose_neumann_function(argv[2]);
 
 
     std::map<types::boundary_id, const Function<dim> *> boundary_functions;
     Functions::ZeroFunction<dim> zero_function(dim);
 
-    boundary_functions[4] = &zero_function;
-    boundary_functions[5] = &zero_function;
+    
+    // TODO: fix this
 
-    NeoHooke problem = NeoHooke(std::make_unique<CubeGenerator<dim>>(), r, boundary_functions, h, num_cells, C, lambda);
-    problem.setup();
-    problem.solve();
-    problem.output();
+    std::unique_ptr<MechanicalDisplacement> problem;
+
+    if(std::string(argv[1]) == "cube") {
+	boundary_functions[4] = &zero_function;
+	boundary_functions[5] = &zero_function;
+	problem = std::make_unique<NeoHooke>(
+	    std::make_unique<CubeGenerator<dim>>(), r, boundary_functions, h, num_cells, C, lambda
+	);
+    } else {
+	// Setting left and right to be still
+	boundary_functions[RodGenerator<dim>::left_id] = &zero_function;
+	boundary_functions[RodGenerator<dim>::right_id] = &zero_function;
+
+	problem = std::make_unique<NeoHooke>(
+	    std::make_unique<RodGenerator<dim>>(), r, boundary_functions, h, num_cells, C, lambda
+	);
+    }
+
+    problem->setup();
+    problem->solve();
+    problem->output();
     return 0;
 }

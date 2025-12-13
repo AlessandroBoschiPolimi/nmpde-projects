@@ -6,6 +6,10 @@
 
 namespace pde {
 
+/**
+* This is a struct that is used to retrieve functions to be applied
+* on boundaries as neumann conditions
+*/
 struct TestFunctions {
     // ----- PARAMETERS -------
     static constexpr unsigned int dim = MechanicalDisplacement::dim;
@@ -16,9 +20,11 @@ struct TestFunctions {
 
     // ------- FUNCTIONS ------
 
+    // Initializes parameters
     static void initialize(double tau_0 = 0.5);
+    // Retrieves the function based on the name
     static const std::function<Point<dim> (const Point<dim> &)> 
-	choose_neumann_function(std::string choice);
+	choose_neumann_function(std::string func_name);
     };
 }
 
