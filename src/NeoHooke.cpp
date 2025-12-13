@@ -216,6 +216,11 @@ void NeoHooke::assemble_system() {
 			cell_rhs(i) -= lambda * std::log(determinant_displacement) * (
 					double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
 				) * fe_values.JxW(q);
+			//Forcing term, hardcoded, please dont judge me, otherwise I cannot bend it
+			// this function f here is f(x,y,z) = (0, 0.02 * x^2, 0) if x > 0
+			// 				    = (0,0,0)            otherwise 
+			cell_rhs(i) += 0.02 * std::pow(fe_values.quadrature_point(q)[0], 2) * 
+				fe_values[displacement].value(i, q)[1] * (int)(fe_values.quadrature_point(q)[0] > 0) * fe_values.JxW(q);
 			}
 		}
 		
@@ -287,7 +292,7 @@ void NeoHooke::solve_system() {
 
     SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
     
-    TrilinosWrappers::PreconditionSOR preconditioner;
+    TrilinosWrappers::PreconditionAMG preconditioner;
     preconditioner.initialize(jacobian_matrix);
 
     solver.solve(jacobian_matrix, delta_owned, residual_vector, preconditioner);
@@ -318,7 +323,7 @@ void NeoHooke::solve() {
 		if (residual_norm <= residual_tolerance) break;
 
 		solve_system();
-		solution_owned += delta_owned;
+		solution_owned +=  delta_owned;
 		solution = solution_owned;
 
 		++n_iter;
