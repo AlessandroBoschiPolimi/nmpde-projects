@@ -173,15 +173,6 @@ void NeoHooke::assemble_system() {
 		fe_values[displacement].get_function_values(solution, solution_loc);
 		fe_values[displacement].get_function_gradients(solution, solution_gradient_loc);
 
-		#if GAMBA_DEBUG
-		for ( const unsigned int q : fe_values.quadrature_point_indices() ) {
-			pcout << "fe_values[displacement].get_function_values " << 
-				solution_loc[q] << std::endl;
-			pcout << "fe_values[displacement].get_function_gradients " << 
-			solution_gradient_loc[q] << std::endl;
-		}
-		#endif
-
 		for ( const unsigned int q : fe_values.quadrature_point_indices() ) {
 			// Compute the displacement tensor I + grad(d(k)) at quadr point q
 			Tensor<2,dim> displacement_tensor({{1,0,0},{0,1,0},{0,0,1}});
@@ -254,7 +245,10 @@ void NeoHooke::assemble_system() {
 					for (unsigned int i = 0; i < dofs_per_cell; ++i) {
 						#if GAMBA_DEBUG
 							pcout << "Point(q) " << fe_values_boundary.quadrature_point(q)  << std::endl;
-							pcout << "fe_values_boundary[displacement].value(i, q) " << fe_values_boundary[displacement].value(i, q) << std::endl;
+							pcout << "Neumann Conditions: " <<
+							neumann_conds(fe_values_boundary.quadrature_point(q)) << std::endl;
+							pcout << "fe_values_boundary[displacement].value(i, q) " << 
+							fe_values_boundary[displacement].value(i, q) << std::endl;
 						#endif
 
 						cell_rhs(i) +=
@@ -279,10 +273,6 @@ void NeoHooke::assemble_system() {
     jacobian_matrix.compress(VectorOperation::add);
     residual_vector.compress(VectorOperation::add);
     
-    #if GAMBA_DEBUG
-	pcout << "system_rhs " << residual_vector << std::endl;
-    #endif
-
 
     {
 		std::map<types::global_dof_index, double> boundary_values;
