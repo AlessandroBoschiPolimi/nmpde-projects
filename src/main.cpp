@@ -28,7 +28,6 @@ int main(int argc, char *argv[])
     // ----------- CHOOSE NEUMANN FUNCTION ----------------
     const auto h  = TestNeumannConditions::choose_neumann_function(neumann_func);
 
-
     std::map<types::boundary_id, const Function<dim> *> boundary_functions;
     Functions::ZeroFunction<dim> zero_function(dim);
 

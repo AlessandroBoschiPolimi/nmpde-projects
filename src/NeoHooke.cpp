@@ -217,7 +217,8 @@ void NeoHooke::assemble_system() {
 					double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
 				) * fe_values.JxW(q);
 
-			cell_rhs(i) += forcing_term(fe_values, displacement, i, q);
+			cell_rhs(i) += forcing_term(fe_values.quadrature_point(q)) *
+					fe_values[displacement].value(i, q)[1] * (int)(fe_values.quadrature_point(q)[0] > 0) * fe_values.JxW(q);
 
 			}
 		}
