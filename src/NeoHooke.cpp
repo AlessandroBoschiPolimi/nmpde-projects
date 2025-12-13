@@ -297,7 +297,7 @@ void NeoHooke::assemble_system() {
 
 void NeoHooke::solve_system() {
 
-    SolverControl solver_control(1000, 1e-6 * residual_vector.l2_norm());
+    SolverControl solver_control(10000, 1e-6 * residual_vector.l2_norm());
 
     SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
     

@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     boundary_functions[4] = &zero_function;
     boundary_functions[5] = &zero_function;
 
-    NeoHooke problem = NeoHooke(std::make_unique<MeshLoader<dim>>(), r, boundary_functions, h, num_cells, C, lambda);
+    NeoHooke problem = NeoHooke(std::make_unique<RodGenerator<dim>>(), r, boundary_functions, h, num_cells, C, lambda);
     problem.setup();
     problem.solve();
     problem.output();

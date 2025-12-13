@@ -106,3 +106,31 @@ public:
 
     bool OnNeumannBoundary(const int id) const override { return !(id == 4 || id == 5); }
 };
+
+template <int dim>
+class RodGenerator : public MeshGenerator<dim>
+{
+public:
+    ~RodGenerator() override = default;
+
+    void Generate(parallel::fullydistributed::Triangulation<dim>& mesh) const override
+    {
+        // Create the mesh using dealii generator
+		Triangulation<dim> mesh_serial;
+		GridGenerator::subdivided_cylinder(mesh_serial, 2.0, 0.1, 1.0);
+
+		// Then, we copy the triangulation into the parallel one.
+		{
+			GridTools::partition_triangulation(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD), mesh_serial);
+			const auto construction_data = TriangulationDescription::Utilities::create_description_from_triangulation(mesh_serial, MPI_COMM_WORLD);
+			mesh.create_triangulation(construction_data);
+		}
+
+		// Notice that we write here the number of *global* active cells (across all
+		// processes).
+    }
+
+    Type ElementType() const override { return Type::Hexahedra; }
+
+    bool OnNeumannBoundary(const int id) const override { return !(id == 0 || id == 1); }
+};
