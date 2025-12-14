@@ -25,8 +25,7 @@
 namespace pde {
 
 static constexpr unsigned int dim = 3;
-using ForcingTermType = std::function<double (const FEValues<dim>& fe_values, const FEValuesExtractors::Vector& displacement,
-	const unsigned int base_idx, const unsigned int quadrature_point)>;
+using ForcingTermType = std::function<double (const Point<dim>& p)>;
 
 using namespace dealii;
 
