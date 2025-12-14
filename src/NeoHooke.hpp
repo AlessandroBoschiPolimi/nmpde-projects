@@ -17,11 +17,12 @@ public:
         const unsigned int &r_,
 	    const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
         const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-	    const unsigned int num_cells_,
 	    const double mu_,
-    	const double lambda_
+    	const double lambda_,
+        const std::unordered_set<int>& neumann_ids_,
+        const std::string& output_filename_
     ) :
-        MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_,  num_cells_),
+        MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_, neumann_ids_, output_filename_),
         mu(mu_),
         lambda(lambda_)
     {}

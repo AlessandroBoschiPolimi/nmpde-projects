@@ -1,0 +1,18 @@
+-----
+NeoHooke
+file ../mesh/mesh.msh
+out ../out/acorn
+N 1
+pull_out -0.5
+D 2 zero
+D 3 zero
+
+
+-----
+NeoHooke
+cube
+out ../out/cube
+N 0, 1, 2, 3
+pull_cube
+D 4 zero
+D 5 zero

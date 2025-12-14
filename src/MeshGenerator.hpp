@@ -24,13 +24,15 @@ public:
 
     virtual void Generate(parallel::fullydistributed::Triangulation<dim>& mesh) const = 0;
     virtual Type ElementType() const = 0;
-    virtual bool OnNeumannBoundary(const int id) const = 0;
+    // virtual bool OnNeumannBoundary(const int id) const = 0;
 };
 
 template <int dim>
 class MeshLoader : public MeshGenerator<dim>
 {
 public:
+    MeshLoader(const std::string& filename_)
+        : filename(filename_) {}
     ~MeshLoader() override = default;
 
     void Generate(parallel::fullydistributed::Triangulation<dim>& mesh) const override
@@ -41,7 +43,7 @@ public:
             GridIn<dim> grid_in;
             grid_in.attach_triangulation(mesh_serial);
 
-            std::ifstream grid_in_file("../mesh/mesh.msh");
+            std::ifstream grid_in_file(filename);
             grid_in.read_msh(grid_in_file);
         }
 
@@ -55,10 +57,12 @@ public:
 
     Type ElementType() const override { return Type::Tetrahedra; }
 
-    bool OnNeumannBoundary(const int id) const override { return id == outside_id || id == inside_id; }
+    // bool OnNeumannBoundary(const int id) const override { return id == outside_id; }
 
-private:
+public:
     static constexpr int outside_id = 1, top_id = 2, inside_id = 3;
+
+    const std::string filename;
 };
 
 template <int dim>
@@ -104,7 +108,7 @@ public:
 
     Type ElementType() const override { return Type::Hexahedra; }
 
-    bool OnNeumannBoundary(const int id) const override { return !(id == 4 || id == 5); }
+    // bool OnNeumannBoundary(const int id) const override { return !(id == 4 || id == 5); }
 };
 
 template <int dim>
@@ -132,5 +136,5 @@ public:
 
     Type ElementType() const override { return Type::Hexahedra; }
 
-    bool OnNeumannBoundary(const int id) const override { return !(id == 0 || id == 1); }
+    // bool OnNeumannBoundary(const int id) const override { return !(id == 0 || id == 1); }
 };

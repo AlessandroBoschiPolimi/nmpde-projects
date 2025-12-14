@@ -18,6 +18,7 @@
 // ----------- CPP INCLUDES ------------
 
 #include <memory>
+#include <unordered_set>
 
 #include "MeshGenerator.hpp"
 
@@ -41,8 +42,6 @@ protected:
     const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
 
     parallel::fullydistributed::Triangulation<dim> mesh;
-
-    const unsigned int num_cells;
 
     // Finite Element System (USE FE_Q)
     std::unique_ptr<FESystem<dim>> fe;
@@ -86,6 +85,9 @@ protected:
     ConditionalOStream pcout;
 
 
+    std::unordered_set<int> neumann_ids;
+    std::string output_filename;
+
     virtual void assemble_system() = 0;
     virtual void solve_system() = 0;
 
@@ -96,7 +98,8 @@ public:
             const unsigned int &r_,
             const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
             const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-            const unsigned int num_cells_
+            const std::unordered_set<int>& neumann_ids_,
+            const std::string& output_filename_
         ) :
         mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
         mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
@@ -105,8 +108,9 @@ public:
         r(r_),
         neumann_conds(neum_funcs_),
         dirichelet_conds(boundary_functions_),
-        num_cells(num_cells_),
-        mesh(MPI_COMM_WORLD)
+        mesh(MPI_COMM_WORLD),
+        neumann_ids(neumann_ids_),
+        output_filename(output_filename_)
     {}
     
     virtual void setup() = 0;

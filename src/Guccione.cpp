@@ -279,7 +279,7 @@ void Guccione::assemble_system() {
 
 				if (!cell->face(face_number)->at_boundary())
 					continue;
-				if (!mesh_generator->OnNeumannBoundary(bound_id))
+				if (!neumann_ids.contains(bound_id))
 					continue;
 
 				// If current face lies on the boundary, and its boundary ID (or
@@ -401,18 +401,14 @@ void Guccione::output() const {
 
     data_out.build_patches();
 
-    // Use std::filesystem to construct the output file name based on the
-    // mesh file name.
-    const std::string output_file_name = "../out/output";
-
     // Finally, we need to write in a format that supports parallel output. This
     // can be achieved in multiple ways (e.g. XDMF/H5). We choose VTU/PVTU files.
     data_out.write_vtu_with_pvtu_record(/* folder = */ "./",
-				      /* basename = */ output_file_name,
+				      /* basename = */ output_filename,
 				      /* index = */ 0,
 				      MPI_COMM_WORLD);
 
-    pcout << "Output written to " << output_file_name << std::endl;
+    pcout << "Output written to " << output_filename << std::endl;
 
     pcout << "===============================================" << std::endl;
 }
