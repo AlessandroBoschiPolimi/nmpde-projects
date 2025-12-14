@@ -31,7 +31,7 @@ using namespace dealii;
 class MechanicalDisplacement
 {
 public:
-    static const unsigned int dim = 3;
+    static constexpr unsigned int dim = 3;
 
 protected:
     const std::unique_ptr<MeshGenerator<dim>> mesh_generator;

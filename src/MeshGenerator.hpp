@@ -93,7 +93,7 @@ public:
 		* 
 		*/
 		Triangulation<dim> mesh_serial;
-		GridGenerator::subdivided_hyper_cube(mesh_serial, 10, 0.0, 1.0, true);
+		GridGenerator::subdivided_hyper_cube(mesh_serial, 8, 0.0, 1.0, true);
         
 		// Then, we copy the triangulation into the parallel one.
 		{

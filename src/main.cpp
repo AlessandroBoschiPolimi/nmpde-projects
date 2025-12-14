@@ -1,4 +1,6 @@
 #include "NeoHooke.hpp"
+#include "Guccione.hpp"
+#include "TestFunctions.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -198,17 +200,7 @@ int main(int argc, char *argv[])
     }
 
     std::vector<Work> work = parse_file(filename);
-
-    const unsigned int r = 1;
-
-    //Material constant
-    const double C = 1; //Pa
-    const double lambda = 2; //Pa
-
     
-    Functions::ZeroFunction<dim> zero_function(dim);
-
-
     for (auto& w : work)
     {
         std::cout << "Starting work:\n";
