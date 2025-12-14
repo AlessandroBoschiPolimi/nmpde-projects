@@ -5,6 +5,7 @@
 
 namespace pde {
 
+
 class Guccione : public MechanicalDisplacement {
 protected:
     const double param_c;
@@ -29,7 +30,7 @@ public:
 	const unsigned int mpi_rank_,
 	const double param_c_,
         const std::array<double, 9> param_b_,
-        const std::function<std::array<Point<dim>, dim>(const Point<dim> &)> &aniso_fun_
+        const AnisotropicFunctionType &aniso_fun_
 	):
         MechanicalDisplacement(
 	    std::move(mesh_generator_), r_, 

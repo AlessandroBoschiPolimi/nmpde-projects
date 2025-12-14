@@ -23,6 +23,21 @@ std::unordered_set<int> parse_csv_ints(const std::string& s) {
     return out;
 }
 
+std::vector<std::string> split(std::string s, const std::string& delimiter) {
+    std::vector<std::string> tokens;
+    size_t pos = 0;
+
+    std::string token;
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+	token = s.substr(0, pos);
+	tokens.push_back(token);
+	s.erase(0, pos + delimiter.length());
+    }
+
+    tokens.push_back(s);
+    return tokens;
+}
+
 std::vector<Work> parse_file(const std::string& path) {
     std::ifstream in(path);
 
@@ -118,6 +133,10 @@ std::vector<Work> parse_file(const std::string& path) {
                 break;
             }
 
+	    if (sec.material == Work::MaterialType::Guccione 
+		&& line[0] == 'c')
+		break;
+
             if (line[0] != 'D')
                 throw std::runtime_error("Expected D line");
 
@@ -131,8 +150,54 @@ std::vector<Work> parse_file(const std::string& path) {
 
             sec.D_entries.push_back({value});
         }
+	
+	if(sec.material == Work::MaterialType::Guccione) {
+	    // if in here already read line
+	    std::vector<std::string> toks;
 
-        sections.push_back(std::move(sec));
+	    /* c param */
+	    {
+		if (line.empty() || line[0] != 'c')
+		    throw std::runtime_error("Expected c line");
+		toks = split(line, " ");
+		sec.C_param = std::stod(toks[1]);
+	    }
+
+	    line = next_line();
+	    /* b param */
+	    {
+		if (line.empty() || line[0] != 'b')
+		    throw std::runtime_error("Expected b line");
+		toks = split(line, " ");
+
+		for(int i = 1; i < 10; i++) {
+		    sec.B_param[i-1] = std::stod(toks[i]);
+		}
+	    }
+
+	    line = next_line();
+	    /* aniso fun */
+	    {
+	    	if (line.empty())
+		    throw std::runtime_error("Expected anisotropic function line");
+		toks = split(line, " ");
+
+		if(toks[0] != "anfun")
+		    throw std::runtime_error("Expected anisotropic function line");
+
+		std::vector<std::string> point_val;
+		for(int i = 1; i < 4; i++) {
+		    point_val = split(toks[i], ",");
+		    sec.aniso_fun_points[i-1] = Point<dim>(
+			std::stod(point_val[0]), 
+			std::stod(point_val[1]), 
+			std::stod(point_val[2])
+		    );
+		}
+	    }
+	}
+
+	sections.push_back(std::move(sec));
     }
 
     return sections;

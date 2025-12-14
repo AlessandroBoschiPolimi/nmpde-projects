@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_set>
 
+#include "defs.hpp"
+
 namespace pde {
 
 struct Work {
@@ -16,6 +18,10 @@ struct Work {
     std::unordered_set<int> N_values;
     std::string N_label;
     std::string N_data;
+
+    double C_param;
+    std::array<double, 9> B_param;
+    std::array<Point<dim>, dim> aniso_fun_points;
 
     struct DEntry {
         int value;

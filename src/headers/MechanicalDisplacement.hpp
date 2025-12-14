@@ -21,13 +21,9 @@
 #include <unordered_set>
 
 #include "MeshGenerator.hpp"
+#include "defs.hpp"
 
 namespace pde {
-
-static constexpr unsigned int dim = 3;
-using ForcingTermType = std::function<double (const Point<dim>& p)>;
-
-using namespace dealii;
 
 class MechanicalDisplacement
 {

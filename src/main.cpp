@@ -6,9 +6,10 @@
 #include <filesystem>
 
 const pde::ForcingTermType select_forcing_term(std::string boolean_value) {
-	using namespace pde::TestForcingFunctions;
-	return std::stoi(boolean_value) ? bend_rod : null_forcing_term;
+    using namespace pde::TestForcingFunctions;
+    return std::stoi(boolean_value) ? bend_rod : null_forcing_term;
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
     }
 
     std::vector<Work> work = parse_file(filename);
-    
+
     for (auto& w : work)
     {
         pcout << "Starting work:\n";
@@ -71,13 +72,15 @@ int main(int argc, char *argv[])
             pcout << ' ' << d.value;
             boundary_functions[d.value] = &zero_function;
         }
-pcout << "\n";
+	pcout << "\n";
         pcout << "UomoNuovo boundary on ids:";
         for (auto d : w.N_values)
             pcout << ' ' << d;
         pcout << "\n";
-        
+
+
         std::function<Point<dim>(const Point<dim> &)> h;
+
 	try {
 	    if(w.N_data == "") {
 		pcout << "No parameter for Neumann Condition found.\n" <<
@@ -99,12 +102,12 @@ pcout << "\n";
         {
             pcout << "NeoHooke Problem\n";
             NeoHooke problem = NeoHooke(
-				std::move(mesh_src), r, 
-				boundary_functions, h, 
-				w.N_values, select_forcing_term(argv[2]),
-				w.output_filename,
-				pcout, mpi_rank,
-				C, lambda
+			    std::move(mesh_src), r, 
+			    boundary_functions, h, 
+			    w.N_values, select_forcing_term(argv[2]),
+			    w.output_filename,
+			    pcout, mpi_rank,
+			    C, lambda
 			);
             problem.setup();
             problem.solve();
@@ -114,8 +117,28 @@ pcout << "\n";
         }
         else
         {
-            // TODO
-        }
+	    const double param_c = w.C_param;
+	    const std::array<double, 9> param_b = w.B_param;
+	    const AnisotropicFunctionType aniso_fun = [&w](const Point<dim>&){ 
+				return std::array<Point<dim>, dim>(
+					{w.aniso_fun_points[0], w.aniso_fun_points[1], w.aniso_fun_points[2]}
+				);
+			};
+	    Guccione problem = Guccione(
+		 std::move(mesh_src), r,
+		 boundary_functions, h,
+		 w.N_values, select_forcing_term(argv[2]),
+		 w.output_filename,
+		 pcout, mpi_rank,
+		 param_c, param_b,
+		 aniso_fun
+	    );
+	    problem.setup();
+            problem.solve();
+            problem.output();
+
+            pcout << "\n\n\n\n";
+	}
     }
 
     return 0;
