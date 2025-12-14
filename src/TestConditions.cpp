@@ -21,8 +21,6 @@ constexpr auto cube_pull = [](const Point<dim> &p) {
     constexpr double small_tol = 1e-13;
     const double tau = TestNeumannConditions::parameter;
 
-    #if GAMBA_DEBUG
-    #endif
     if (std::abs(p[0]) < small_tol && std::abs(p[1]) > small_tol)
 	    return Point<dim>(-tau, 0, 0);
     else if (std::abs(p[0]) > (1 - small_tol) && std::abs(p[1]) > small_tol)
@@ -35,6 +33,8 @@ constexpr auto cube_pull = [](const Point<dim> &p) {
 	    return Point<dim>(0, 0, 0);
 };
 
+// FIXME: This function doesn't work
+// the simulation doesn't converge
 /**
 * This function should bend the rod as a horseshoe
 * it applies a force along z based on the x coordinate 
