@@ -22,16 +22,16 @@
 
 #include "MeshGenerator.hpp"
 
-// TODO: understand why must use = 0 after virtual function
-
 namespace pde {
+
+static constexpr unsigned int dim = 3;
+using ForcingTermType = std::function<double (const FEValues<dim>& fe_values, const FEValuesExtractors::Vector& displacement,
+	const unsigned int base_idx, const unsigned int quadrature_point)>;
 
 using namespace dealii;
 
 class MechanicalDisplacement
 {
-public:
-    static constexpr unsigned int dim = 3;
 
 protected:
     const std::unique_ptr<MeshGenerator<dim>> mesh_generator;
@@ -40,6 +40,7 @@ protected:
     // Neumann conditions
     const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
     const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
+    const ForcingTermType forcing_term;
 
     parallel::fullydistributed::Triangulation<dim> mesh;
 
@@ -100,6 +101,7 @@ public:
             const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
             const std::unordered_set<int>& neumann_ids_,
             const std::string& output_filename_
+	    const ForcingTermType &forcing_term_
         ) :
         mesh_generator(std::move(mesh_generator_)),
         r(r_),
@@ -107,8 +109,8 @@ public:
         dirichelet_conds(boundary_functions_),
         neumann_ids(neumann_ids_),
         output_filename(output_filename_)
+	forcing_term(forcing_term_),
 	mesh(MPI_COMM_WORLD),
-        num_cells(num_cells_),
         mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
         mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
 	pcout(std::cout, mpi_rank == 0)        

@@ -20,9 +20,12 @@ public:
     	const double mu_,
     	const double lambda_,
         const std::unordered_set<int>& neumann_ids_,
-        const std::string& output_filename_
-    ) :
-        MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_, neumann_ids_, output_filename_),
+        const std::string& output_filename_,
+	const ForcingTermType forcing_term_,
+	const double mu_,
+    	const double lambda_
+	) :
+        MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_, forcing_term_, output_filename_),
         mu(mu_),
         lambda(lambda_)
     {}

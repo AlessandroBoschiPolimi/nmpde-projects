@@ -1,6 +1,12 @@
 #include "NeoHooke.hpp"
 #include "Guccione.hpp"
-#include "TestFunctions.hpp"
+#include "TestConditions.hpp"
+
+
+const pde::ForcingTermType select_forcing_term(std::string boolean_value) {
+	using namespace pde::TestForcingFunctions;
+	return std::stoi(boolean_value) ? bend_rod : null_forcing_term;
+}
 
 #include <iostream>
 #include <fstream>
