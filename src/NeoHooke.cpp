@@ -1,4 +1,4 @@
-#include "NeoHooke.hpp"
+#include "headers/NeoHooke.hpp"
 
 // --------- DEALII HEADERS ----------
 #include <deal.II/grid/grid_generator.h>

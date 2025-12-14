@@ -1,6 +1,5 @@
 #include "MechanicalDisplacement.hpp"
 
-
 namespace pde {
 
 class NeoHooke : public MechanicalDisplacement {
@@ -17,15 +16,19 @@ public:
         const unsigned int &r_,
 	const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
         const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-    	const double mu_,
-    	const double lambda_,
         const std::unordered_set<int>& neumann_ids_,
-        const std::string& output_filename_,
 	const ForcingTermType forcing_term_,
-	const double mu_,
+        const std::string& output_filename_,
+	const ConditionalOStream pcout_,
+	const unsigned int mpi_rank_,
+    	const double mu_,
     	const double lambda_
 	) :
-        MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_, forcing_term_, output_filename_),
+        MechanicalDisplacement(
+	    std::move(mesh_generator_), r_, 
+	    boundary_functions_, neum_funcs_, neumann_ids_,
+	    forcing_term_, output_filename_, pcout_, mpi_rank_
+	),
         mu(mu_),
         lambda(lambda_)
     {}

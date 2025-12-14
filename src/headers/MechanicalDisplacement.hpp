@@ -36,9 +36,14 @@ protected:
     const std::unique_ptr<MeshGenerator<dim>> mesh_generator;
     const unsigned int r;
 
-    // Neumann conditions
+    // ---------- NEUMANN CONDITIONS ----------
     const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
+    const std::unordered_set<int> neumann_ids;
+    
+    // ---------- DIRICHELET CONDITIONS -----------
     const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
+    
+    // --------- FORCING TERM -------------
     const ForcingTermType forcing_term;
 
     parallel::fullydistributed::Triangulation<dim> mesh;
@@ -79,13 +84,9 @@ protected:
     // ------------------ MPI STUFF ---------------------
     // Number of MPI processes.
     const unsigned int mpi_size;
-    // This MPI process.
     const unsigned int mpi_rank;
-    // Parallel output stream.
-    ConditionalOStream pcout;
+    const ConditionalOStream pcout;
 
-
-    std::unordered_set<int> neumann_ids;
     std::string output_filename;
 
     virtual void assemble_system() = 0;
@@ -99,20 +100,22 @@ public:
             const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
             const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
             const std::unordered_set<int>& neumann_ids_,
-            const std::string& output_filename_
-	    const ForcingTermType &forcing_term_
-        ) :
+	    const ForcingTermType &forcing_term_,
+            const std::string& output_filename_,
+	    const ConditionalOStream pcout_,
+	    const unsigned int mpi_rank_
+    ) :
         mesh_generator(std::move(mesh_generator_)),
         r(r_),
         neumann_conds(neum_funcs_),
-        dirichelet_conds(boundary_functions_),
         neumann_ids(neumann_ids_),
-        output_filename(output_filename_)
+        dirichelet_conds(boundary_functions_),
 	forcing_term(forcing_term_),
 	mesh(MPI_COMM_WORLD),
         mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
-        mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
-	pcout(std::cout, mpi_rank == 0)        
+	mpi_rank(mpi_rank_),
+	pcout(pcout_),
+        output_filename(output_filename_)
     {}
     
     virtual void setup() = 0;

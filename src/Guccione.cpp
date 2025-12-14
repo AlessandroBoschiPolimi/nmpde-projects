@@ -1,4 +1,4 @@
-#include "Guccione.hpp"
+#include "headers/Guccione.hpp"
 
 // --------- DEALII HEADERS ----------
 #include <deal.II/grid/grid_generator.h>

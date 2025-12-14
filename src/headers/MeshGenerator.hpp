@@ -133,6 +133,6 @@ public:
 
     Type ElementType() const override { return Type::Hexahedra; }
 
-    bool OnNeumannBoundary(const int id) const override { return !(id == left_id || id == right_id); }
+    // bool OnNeumannBoundary(const int id) const override { return !(id == left_id || id == right_id); }
     static constexpr int hull_id = 0, left_id = 1, right_id = 2;
 };
