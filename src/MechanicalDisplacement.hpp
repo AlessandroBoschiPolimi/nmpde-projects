@@ -101,16 +101,17 @@ public:
             const std::unordered_set<int>& neumann_ids_,
             const std::string& output_filename_
         ) :
-        mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
-        mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
-        pcout(std::cout, mpi_rank == 0),
         mesh_generator(std::move(mesh_generator_)),
         r(r_),
         neumann_conds(neum_funcs_),
         dirichelet_conds(boundary_functions_),
-        mesh(MPI_COMM_WORLD),
         neumann_ids(neumann_ids_),
         output_filename(output_filename_)
+	mesh(MPI_COMM_WORLD),
+        num_cells(num_cells_),
+        mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
+        mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD)),
+	pcout(std::cout, mpi_rank == 0)        
     {}
     
     virtual void setup() = 0;

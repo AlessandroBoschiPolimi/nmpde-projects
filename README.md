@@ -50,3 +50,22 @@ To create the mesh run the following command outside the container
 It requires gmsh installed
 
 	sudo apt install gmsh
+
+## Launch Command
+
+To run the command run:
+`./PDE-06 <mesh_type> <function_name>`
+
+### Mesh types
+
+> Not properly parsed
+
+- `rod`
+- `cube`
+
+### Function Names
+
+> Not properly parsed
+
+- `cube_pull`
+- `rod_bend`

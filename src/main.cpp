@@ -234,7 +234,6 @@ int main(int argc, char *argv[])
             std::cout << ' ' << d;
         std::cout << "\n";
         
-
         std::function<Point<dim>(const Point<dim> &)> h;
         if (w.N_label == "pull_out")
         {
@@ -283,7 +282,6 @@ int main(int argc, char *argv[])
             // TODO
         }
     }
-
 
     return 0;
 }

@@ -5,9 +5,6 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <filesystem>
-#include <fstream>
-
 using namespace dealii;
 
 enum Type
@@ -93,7 +90,7 @@ public:
 		* 
 		*/
 		Triangulation<dim> mesh_serial;
-		GridGenerator::subdivided_hyper_cube(mesh_serial, 8, 0.0, 1.0, true);
+		GridGenerator::subdivided_hyper_cube(mesh_serial, 10, 0.0, 1.0, true);
         
 		// Then, we copy the triangulation into the parallel one.
 		{
@@ -121,7 +118,7 @@ public:
     {
         // Create the mesh using dealii generator
 		Triangulation<dim> mesh_serial;
-		GridGenerator::subdivided_cylinder(mesh_serial, 2.0, 0.1, 1.0);
+		GridGenerator::subdivided_cylinder(mesh_serial, 10, 0.1, 1.0);
 
 		// Then, we copy the triangulation into the parallel one.
 		{
@@ -136,5 +133,6 @@ public:
 
     Type ElementType() const override { return Type::Hexahedra; }
 
-    // bool OnNeumannBoundary(const int id) const override { return !(id == 0 || id == 1); }
+    bool OnNeumannBoundary(const int id) const override { return !(id == left_id || id == right_id); }
+    static constexpr int hull_id = 0, left_id = 1, right_id = 2;
 };

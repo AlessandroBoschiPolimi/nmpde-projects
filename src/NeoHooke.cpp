@@ -25,10 +25,6 @@
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_tools.h>
 
-// ------------ CPP HEADERS ----------
-#include <filesystem>
-#include <fstream>
-
 #define GAMBA_DEBUG false
 
 using namespace pde;
@@ -287,7 +283,7 @@ void NeoHooke::assemble_system() {
 
 void NeoHooke::solve_system() {
 
-    SolverControl solver_control(100000, 1e-6 * residual_vector.l2_norm());
+    SolverControl solver_control(1000000, 1e-6 * residual_vector.l2_norm());
 
     SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
     

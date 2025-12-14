@@ -15,9 +15,9 @@ public:
     NeoHooke(
         std::unique_ptr<MeshGenerator<dim>> mesh_generator_,
         const unsigned int &r_,
-	    const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
+	const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
         const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-	    const double mu_,
+    	const double mu_,
     	const double lambda_,
         const std::unordered_set<int>& neumann_ids_,
         const std::string& output_filename_
