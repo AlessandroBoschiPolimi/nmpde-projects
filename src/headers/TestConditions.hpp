@@ -43,8 +43,7 @@ static const ForcingTermType bend_rod = [](
 	return 0.02 * std::pow(p[0], 2);
 };
 
-};
-
+}
 
 // ---------------- FUNCTIONS --------------------------
 

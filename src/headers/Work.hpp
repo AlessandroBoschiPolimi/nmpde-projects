@@ -19,6 +19,7 @@ struct Work {
     std::string N_label;
     std::string N_data;
 
+    double lambda_param;
     double C_param;
     std::array<double, 9> B_param;
     std::array<Point<dim>, dim> aniso_fun_points;

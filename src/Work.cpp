@@ -120,7 +120,6 @@ std::vector<Work> parse_file(const std::string& path) {
 
         /* D lines */
         while (true) {
-            std::streampos pos = in.tellg();
             if (!std::getline(in, line))
                 break;
 
@@ -128,13 +127,12 @@ std::vector<Work> parse_file(const std::string& path) {
             if (line.empty())
                 continue;
 
-            if (line == "-----") {
-                in.seekg(pos);
-                break;
-            }
-
 	    if (sec.material == Work::MaterialType::Guccione 
 		&& line[0] == 'c')
+		break;
+
+	    if (sec.material == Work::MaterialType::NeoHooke
+		&& line[0] == 'C')
 		break;
 
             if (line[0] != 'D')
@@ -151,8 +149,32 @@ std::vector<Work> parse_file(const std::string& path) {
             sec.D_entries.push_back({value});
         }
 	
+	// if in here already read line
+	
+	/* NeoHooke additional parameters */
+	if(sec.material == Work::MaterialType::NeoHooke) {
+	     std::vector<std::string> toks;
+
+	    /* c param */
+	    {
+		if (line.empty() || line[0] != 'C')
+		    throw std::runtime_error("Expected C line");
+		toks = split(line, " ");
+		sec.C_param = std::stod(toks[1]);
+	    }
+
+	    line = next_line();
+	    /* lambda param */
+	    {
+		if (line.empty() || line[0] != 'l')
+		    throw std::runtime_error("Expected lambda line");
+		toks = split(line, " ");
+		sec.lambda_param = std::stod(toks[1]);
+	    }
+	}
+	
+	/* Guccione additional parameters*/
 	if(sec.material == Work::MaterialType::Guccione) {
-	    // if in here already read line
 	    std::vector<std::string> toks;
 
 	    /* c param */
@@ -195,6 +217,17 @@ std::vector<Work> parse_file(const std::string& path) {
 		    );
 		}
 	    }
+	}
+
+	while(true) {
+	    std::streampos pos = in.tellg();
+            if (!std::getline(in, line))
+                break;
+
+            if (line == "-----") {
+                in.seekg(pos);
+                break;
+            }
 	}
 
 	sections.push_back(std::move(sec));

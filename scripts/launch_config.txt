@@ -3,10 +3,11 @@ NeoHooke
 file ../mesh/mesh.msh
 out ../out/acorn
 N 1
-cup_pull_out -0.5
+bowl_pull_out -0.5
 D 2 zero
 D 3 zero
-
+C 1
+l 2
 
 -----
 NeoHooke
@@ -16,3 +17,6 @@ N 0, 1, 2, 3
 cube_pull
 D 4 zero
 D 5 zero
+C 1
+l 2
+

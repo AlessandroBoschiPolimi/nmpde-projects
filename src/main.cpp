@@ -15,8 +15,6 @@ int main(int argc, char *argv[])
 {
     using namespace pde;
     constexpr unsigned int r = 1;
-    constexpr unsigned int C = 1; //Pa
-    constexpr unsigned int lambda = 2; //Pa
 
     Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
 
@@ -101,6 +99,8 @@ int main(int argc, char *argv[])
         if (w.material == Work::MaterialType::NeoHooke)
         {
             pcout << "NeoHooke Problem\n";
+	    const unsigned int C = w.C_param; //Pa
+	    const unsigned int lambda = w.lambda_param; //Pa
             NeoHooke problem = NeoHooke(
 			    std::move(mesh_src), r, 
 			    boundary_functions, h, 
