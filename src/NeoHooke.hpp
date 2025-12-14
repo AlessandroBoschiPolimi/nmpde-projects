@@ -13,15 +13,15 @@ protected:
 public:
 
     NeoHooke(
-        std::unique_ptr<MeshGenerator<dim>> mesh_generator_,
+	const std::string& mesh_file_input_,
         const unsigned int &r_,
 	const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
-        const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
+        const NeumannCondition &neum_conds_,
 	const ForcingTermType forcing_term_,
 	const double mu_,
     	const double lambda_
     ) :
-        MechanicalDisplacement(std::move(mesh_generator_), r_, boundary_functions_, neum_funcs_, forcing_term_),
+        MechanicalDisplacement(mesh_file_input_, r_, boundary_functions_, neum_conds_, forcing_term_),
         mu(mu_),
         lambda(lambda_)
     {}

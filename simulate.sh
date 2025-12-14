@@ -6,6 +6,7 @@
 mesh_choice="cube"
 neumann_func="cube_pull"
 forcing_term=0
+file_input="./mesh/mesh-cup-tetra-10.msh"
 
 # PARALLEL STUFF
 threads_num=1
@@ -85,7 +86,7 @@ parse_arguments() {
 }
 
 run() {
-	args="$mesh_choice $neumann_func $forcing_term"
+	args="$mesh_choice $neumann_func $forcing_term $file_input"
 
 	echo "Running Simulation..."
 	if [ $threads_num -eq 1 ]; then

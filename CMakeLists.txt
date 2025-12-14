@@ -61,14 +61,24 @@ endif()
 # this cannot work in the container since there is no gmsh
 # and we kinda need to be in the container to have dealii
 # set(MESH_FILE mesh/mesh.msh)
-# 
+#
 # add_custom_command(
 #     OUTPUT ${MESH_FILE}
 #     COMMAND gmsh scripts/mesh_ellipse.geo ${MESH_FILE}
 #     DEPENDS scripts/mesh_ellipse.geo
 #     COMMENT "Generating ${MESH_FILE}..."
 # )
-# 
+#
 # add_custom_target(generate_file ALL
 #     DEPENDS ${MESH_FILE}
 # )
+
+if(UNIX)
+	add_executable(generate_meshes "scripts/generate_meshes.cpp" "scripts/MeshGenerator.hpp")
+	deal_ii_setup_target(generate_meshes)
+
+	target_compile_definitions(generate_meshes PRIVATE PLATFORM_LINUX)
+
+	# GCC/Clang warnings
+	target_compile_options(generate_meshes PRIVATE -Wall -Wextra -Wpedantic)
+endif()

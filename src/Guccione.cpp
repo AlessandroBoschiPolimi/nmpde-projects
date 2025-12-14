@@ -26,7 +26,6 @@
 #include <deal.II/grid/grid_tools.h>
 
 // ------------ CPP HEADERS ----------
-#include <filesystem>
 #include <fstream>
 
 #define GAMBA_DEBUG false
@@ -35,39 +34,49 @@ using namespace pde;
 
 void Guccione::setup() {
 
-    // TODO: Read from mesh
     pcout << "===============================" << std::endl;
-    
-    // Create the mesh
-	{
+
+    {
 	    pcout << "Initializing the mesh" << std::endl;
 	
-		mesh_generator->Generate(mesh);
-		
-		pcout << "  Number of elements = " << mesh.n_global_active_cells() << std::endl;
-	}
+	    Triangulation<dim> mesh_serial;
+	    {
+		    GridIn<dim> grid_in;
+		    grid_in.attach_triangulation(mesh_serial);
+		    std::ifstream mesh_file(mesh_file_input);
+		    grid_in.read_msh(mesh_file);
+	    }
+
+	    // Copy the serial mesh into the parallel one.
+	    {
+		    GridTools::partition_triangulation(mpi_size, mesh_serial);
+
+		    const auto construction_data = TriangulationDescription::Utilities::
+		    create_description_from_triangulation(mesh_serial, MPI_COMM_WORLD);
+		    mesh.create_triangulation(construction_data);
+	    }
+	
+	    pcout << "  Number of elements = " << mesh.n_global_active_cells() << std::endl;
+    }
 
     pcout << "------------------------------------" << std::endl;
 
     // Initialize the finite element space
     {
-		// TODO: Check that this Finite Element Space suffices
-		pcout << "Initializing the finite element space" << std::endl;
+	    // TODO: Check that this Finite Element Space suffices
+	    pcout << "Initializing the finite element space" << std::endl;
 
-		if (mesh_generator->ElementType() == Type::Tetrahedra)
-			fe = std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(r)^dim);
-		else
-			fe = std::make_unique<FESystem<dim>>(FE_Q<dim>(r)^dim);
+	    fe = std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(r)^dim);
 
-		pcout << "  Degree                     = " << fe->degree << std::endl;
-		pcout << "  DoFs per cell              = " << fe->dofs_per_cell
-			<< std::endl;
+	    pcout << "  Degree                     = " << fe->degree << std::endl;
+	    pcout << "  DoFs per cell              = " << fe->dofs_per_cell
+		    << std::endl;
 
-		// TODO: Check that these quadrature are correct enough
-		quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
-		quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
+	    // TODO: Check that these quadrature are correct enough
+	    quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
+	    quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
 
-		pcout << "  Quadrature points per cell = " << quadrature->size() << std::endl;
+	    pcout << "  Quadrature points per cell = " << quadrature->size() << std::endl;
     }
 
     pcout << "----------------------------------" << std::endl;
@@ -279,7 +288,7 @@ void Guccione::assemble_system() {
 
 				if (!cell->face(face_number)->at_boundary())
 					continue;
-				if (!mesh_generator->OnNeumannBoundary(bound_id))
+				if (!neumann_conds.OnNeumannBoundary(bound_id))
 					continue;
 
 				// If current face lies on the boundary, and its boundary ID (or
@@ -296,7 +305,7 @@ void Guccione::assemble_system() {
 						#endif
 
 						cell_rhs(i) +=
-							neumann_conds(fe_values_boundary.quadrature_point(q)) *
+							neumann_conds.neumann_func(fe_values_boundary.quadrature_point(q)) *
 							fe_values_boundary[displacement].value(i, q) *     
 							fe_values_boundary.JxW(q);
 					}

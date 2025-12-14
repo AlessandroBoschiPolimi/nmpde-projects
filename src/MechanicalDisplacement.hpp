@@ -19,24 +19,31 @@
 
 #include <memory>
 
-#include "MeshGenerator.hpp"
-
 namespace pde {
+
+
+
+using namespace dealii;
+
 
 static constexpr unsigned int dim = 3;
 using ForcingTermType = std::function<double (const Point<dim>& p)>;
 
-using namespace dealii;
+struct NeumannCondition {
+    const std::function<Point<dim>(const Point<dim> &)> neumann_func;
+    const std::vector<int> bounds_ids;
+    bool OnNeumannBoundary(int bound_id) const { return (std::find(bounds_ids.begin(), bounds_ids.end(), bound_id) != bounds_ids.end()); };
+};
 
 class MechanicalDisplacement
 {
 
 protected:
-    const std::unique_ptr<MeshGenerator<dim>> mesh_generator;
+    const std::string mesh_file_input;
     const unsigned int r;
 
     // Neumann conditions
-    const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
+    const NeumannCondition neumann_conds;
     const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
     const ForcingTermType forcing_term;
 
@@ -90,15 +97,15 @@ protected:
 public:
 
     MechanicalDisplacement(
-            std::unique_ptr<MeshGenerator<dim>> mesh_generator_,
+            const std::string& mesh_file_input_,
             const unsigned int &r_,
             const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
-            const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
+            const NeumannCondition &neum_conds_,
 	    const ForcingTermType &forcing_term_
         ) :
-        mesh_generator(std::move(mesh_generator_)),
+	mesh_file_input(mesh_file_input_),
         r(r_),
-        neumann_conds(neum_funcs_),
+        neumann_conds(neum_conds_),
         dirichelet_conds(boundary_functions_),
 	forcing_term(forcing_term_),
 	mesh(MPI_COMM_WORLD),

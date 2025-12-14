@@ -2,7 +2,6 @@
 #include "Guccione.hpp"
 #include "TestConditions.hpp"
 
-
 const pde::ForcingTermType select_forcing_term(std::string boolean_value) {
 	using namespace pde::TestForcingFunctions;
 	return std::stoi(boolean_value) ? bend_rod : null_forcing_term;
@@ -17,6 +16,7 @@ int main(int argc, char *argv[])
     const std::string mesh_choice = std::string(argv[1]);
     const std::string neumann_func = std::string(argv[2]);
     const std::string forcing_func = std::string(argv[3]);
+    const std::string file_path = std::string(argv[4]);
 
     const unsigned int r = 1;
     //Material constant
@@ -39,15 +39,15 @@ int main(int argc, char *argv[])
 	boundary_functions[4] = &zero_function;
 	boundary_functions[5] = &zero_function;
 	problem = std::make_unique<NeoHooke>(
-	    std::make_unique<CubeGenerator<dim>>(), r, boundary_functions, h, forcing_term, C, lambda
+	    file_path, r, boundary_functions, NeumannCondition(h, {0,1,2,3}), forcing_term, C, lambda
 	);
     } else {
 	// Setting left and right to be still
-	boundary_functions[RodGenerator<dim>::left_id] = &zero_function;
-	boundary_functions[RodGenerator<dim>::right_id] = &zero_function;
+	boundary_functions[1] = &zero_function;
+	boundary_functions[2] = &zero_function;
 
 	problem = std::make_unique<NeoHooke>(
-	    std::make_unique<RodGenerator<dim>>(), r, boundary_functions, h, forcing_term, C, lambda
+	    file_path, r, boundary_functions, NeumannCondition(h, {0}), forcing_term, C, lambda
 	);
     }
 
