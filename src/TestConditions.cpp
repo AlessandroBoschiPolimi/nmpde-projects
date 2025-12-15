@@ -21,6 +21,9 @@ const std::function<Point<dim> (const Point<dim> &)>
     if(choice == "cube_pull") {
 	return functions::cube_pull;
     }
+    if(choice == "rod_pull") {
+	return functions::rod_pull;
+    }
     if(choice == "cube_push") {
 	return functions::cube_push;
     }

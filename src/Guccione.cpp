@@ -190,7 +190,7 @@ void Guccione::assemble_system() {
 	    //Build the deformation gradient
 	    Tensor<2,dim> F = I + solution_gradient_loc[q];
             // build E
-            Tensor<2, dim> E = 0.5 * (F*transpose(F) - I);
+            Tensor<2, dim> E = 0.5 * (transpose(F)*(F) - I);
             // build D and B
             Tensor<4, dim> D;
             Tensor<2, dim> B;
@@ -204,7 +204,8 @@ void Guccione::assemble_system() {
 				B[i][j] += 2 * b * ((E * m) * n) * m[i] * n[j];
                     		for (unsigned int k = 0; k< dim; k++) {
                     			for (unsigned int l = 0; l< dim; l++) {
-						D[k][l][i][j] += 2 * b * m[i] * n[j] * m[k] * n[l];
+						D[k][l][i][j] += 2 * b * m[i] * n[j] * n[k] * m[l];
+						//std::cout << k << l << i << j << ": " << D[k][l][i][j] << std::endl;
 					}
 				}
 			}
@@ -223,32 +224,28 @@ void Guccione::assemble_system() {
 	    }
             // build P
             Tensor<2, dim> P;
-	    for (unsigned int k = 0; k < dim; ++k){
-	    	for (unsigned int l = 0; l < dim; ++l){
-	    		for (unsigned int n = 0; n < dim; ++n)
-				P[k][l] += param_c / 4 * std::exp(Q) * F[n][l] * (B[n][k] + B[k][n]);
-		}
-	    }
-            
+	    P = param_c / 2.0 * std::exp(Q) * F * B;
             // compute dP/dF
 	    Tensor<4, dim> dPdF;
 	    for (unsigned int k = 0; k < dim; ++k){
 	    	for (unsigned int l = 0; l < dim; ++l){
 	    		for (unsigned int i = 0; i < dim; ++i){
 	    			for (unsigned int j = 0; j < dim; ++j){
-	    				if (l == j){
-						dPdF[k][l][i][j] += param_c / 4 * std::exp(Q) *
-							(B[k][i] + B[i][k]);
+	    				if (k == i){
+						dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
+							(B[l][j]);
 					}
-					for (unsigned int n = 0; n < dim; ++n){
-	    					dPdF[k][l][i][j] += 1 / 2 * P[k][l]*
-						F[n][j] * (B[i][n] + B[n][i]);
-						for (unsigned int a = 0; a < dim; ++a)
-							dPdF[k][l][i][j] += param_c / 8 * std::exp(Q) *
-								F[n][l] * F[a][j] *
-								(D[i][a][k][n] + D[a][i][k][n] +
-								D[i][a][n][k] + D[a][i][n][k]);
+	    				dPdF[k][l][i][j] += P[k][l]*
+						            (F * B)[i][j];
+					for (unsigned int n = 0; n < dim; n++){
+						for (unsigned int a = 0; a < dim; a++){
+
+					dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
+						         	F[k][a] * F[i][n] * 
+								(D[a][l][n][j]);
+						}
 					}
+							//	D[j][a][n][l] + D[a][j][n][l]);
 				}
 			}
 		}
@@ -262,11 +259,20 @@ void Guccione::assemble_system() {
 				//TODO:Check the signs
 				//(dPdF:grad(delta)):grad(v)
 				//TODO: Does this contract the last two indeces? Is the inermediate right?
-				Tensor<2, dim> intermediate = double_contract<0,0,1,1>(dPdF, phi_j_grad);
-				cell_matrix(i, j) += double_contract<0,0,1,1>(intermediate, phi_i_grad);
+				Tensor<2, dim> intermediate;
+				for (unsigned int a = 0; a < dim; a++){
+					for (unsigned int b = 0; b < dim; b++){
+						for (unsigned int c = 0; c < dim; c++){
+							for (unsigned int d = 0; d < dim; d++){
+								intermediate[a][b] += dPdF[a][b][c][d] * phi_j_grad[c][d];
+							}
+						}
+					}
+				}
+				cell_matrix(i, j) += double_contract<0,0,1,1>(intermediate, phi_i_grad) * fe_values.JxW(q) ;
 			}
 
-			cell_rhs(i) -= double_contract<0,0,1,1>(P, phi_i_grad);
+			cell_rhs(i) -= double_contract<0,0,1,1>(P, phi_i_grad) * fe_values.JxW(q);
 			}
 		}
 		
@@ -339,7 +345,7 @@ void Guccione::solve_system() {
 
     SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
     
-    TrilinosWrappers::PreconditionSOR preconditioner;
+    TrilinosWrappers::PreconditionAMG preconditioner;
     preconditioner.initialize(jacobian_matrix);
 
     solver.solve(jacobian_matrix, delta_owned, residual_vector, preconditioner);
