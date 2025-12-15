@@ -68,7 +68,28 @@ constexpr auto cube_pull = [](const Point<dim> &p) {
     else if (std::abs(p[1]) > (1 - small_tol) && std::abs(p[0]) > small_tol)
 	    return Point<dim>(0, tau, 0);
     else
+	    return Point<dim>(0, 0, -tau);
+};
+
+constexpr auto cube_push = [](const Point<dim> &p) {
+    constexpr double small_tol = 1e-13;
+    const double tau = TestNeumannConditions::parameter;
+
+    if (std::abs(p[0]) < small_tol)
+	    return Point<dim>(tau, 0, 0);
+    else if (std::abs(p[0]) > (1 - small_tol))
+	    return Point<dim>(-tau, 0, 0);
+    else if (std::abs(p[1]) < small_tol)
+	    return Point<dim>(0, tau, 0);
+    else if (std::abs(p[1]) > (1 - small_tol))
+	    return Point<dim>(0, -tau, 0);
+    else if (std::abs(p[2]) < small_tol)
+	    return Point<dim>(0, 0, tau);
+    else if (std::abs(p[2]) > (1 - small_tol))
+	    return Point<dim>(0, 0, -tau);
+    else
 	    return Point<dim>(0, 0, 0);
+
 };
 
 // FIXME: This function doesn't work

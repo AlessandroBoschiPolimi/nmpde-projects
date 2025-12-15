@@ -1,24 +1,10 @@
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/acorn
+cube
+out ../out/cube_push
 it 10000
 N 1
-bowl_pull_out -0.5
-D 2 zero
-D 3 zero
+cube_push
+D 0 zero
 C 1
 l 2
-
------
-NeoHooke
-cube
-out ../out/cube
-it 10000
-N 0, 1, 2, 3
-cube_pull
-D 4 zero
-D 5 zero
-C 1
-l 2
-
