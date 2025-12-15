@@ -68,7 +68,7 @@ constexpr auto cube_pull = [](const Point<dim> &p) {
     else if (std::abs(p[1]) > (1 - small_tol) && std::abs(p[0]) > small_tol)
 	    return Point<dim>(0, tau, 0);
     else
-	    return Point<dim>(0, 0, 0);
+	    return Point<dim>(0, 0, -tau);
 };
 
 // FIXME: This function doesn't work
