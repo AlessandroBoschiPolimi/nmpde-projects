@@ -322,7 +322,8 @@ void NeoHooke::solve() {
 		if (residual_norm <= residual_tolerance) break;
 
 		solve_system();
-		solution_owned +=  delta_owned;
+		// delta_owned *= 0.5;
+		solution_owned += delta_owned;
 		solution = solution_owned;
 
 		++n_iter;

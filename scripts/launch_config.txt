@@ -1,10 +1,11 @@
 -----
 NeoHooke
 cube
-out ../out/cube_push
+out ../out/cube_push_x
 it 10000
-N 1
-cube_push
-D 0 zero
+N 4
+cube_push_x 0.5
+D 5 zero
 C 1
-l 2
+l 100
+

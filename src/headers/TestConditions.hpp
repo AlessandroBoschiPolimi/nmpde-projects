@@ -26,8 +26,6 @@ struct TestNeumannConditions {
 };
 
 
-// TODO: maybe change this so that forcing functions can be dynamically switched
-
 namespace TestForcingFunctions {
 
 static const ForcingTermType null_forcing_term = [](
@@ -89,29 +87,24 @@ constexpr auto cube_push = [](const Point<dim> &p) {
 	    return Point<dim>(0, 0, -tau);
     else
 	    return Point<dim>(0, 0, 0);
-
 };
 
-// FIXME: This function doesn't work
-// the simulation doesn't converge
-/**
-* This function should bend the rod as a horseshoe
-* it applies a force along z based on the x coordinate 
-* and proportional to tau
-*/
-constexpr auto rod_bend = [](const Point<dim> &p) {
-    const double tau = TestNeumannConditions::parameter;
-    // TODO: check that this function is in fact correct 
-    // and it's not the cause of the divergence
-    return Point<dim>(0, 0, tau * p[0]);
+constexpr auto cube_push_x = [](const Point<dim> &p) {
+    if(p[1] > 0.4 &&  p[1] < 0.6 && p[0] > 0.4 && p[0] < 0.6)
+	return Point<dim>(0, 0, TestNeumannConditions::parameter);
+    else return Point<dim>(0,0,0);	
 };
 
+constexpr auto cube_twist = [](const Point<dim> &p) {
+};
+
+// Applies a force in the normal direction w.r.t. surface
+// of the ellipsoid. OUTGOING
 constexpr auto bowl_pull_out = [](const Point<dim> &p) {
 	static const auto aa = 1 * 1, bb = 1 * 1, cc = 3 * 3;
 	const double tau = TestNeumannConditions::parameter;
 	auto xx = p[0] * p[0], yy = p[1] * p[1], zz = p[2] * p[2];
-	if (xx / aa + yy / bb + zz / cc > 0.9)
-	    return tau / std::sqrt(64 * xx + 64 * yy + 64 / 81.0 * zz) *
+	return tau / std::sqrt(64 * xx + 64 * yy + 64 / 81.0 * zz) *
 		Point<dim>(8 * p[0], 8 * p[1], 8 / 9.0 * p[2]); // vector normal to the outer surface of the acorn;
 	return Point<dim>(0, 0, 0);
 };

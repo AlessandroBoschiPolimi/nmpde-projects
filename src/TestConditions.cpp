@@ -15,20 +15,19 @@ const std::function<Point<dim> (const Point<dim> &)>
 {
     // Here I simply started defining different functions
     // The more models and boundary conditions we apply the better it is.
-    if(choice.starts_with("rod")) {
-    	return functions::rod_bend;
-    } 
-
     if (choice.starts_with("bowl")) {
 	return functions::bowl_pull_out;
     }
-    if(choice.starts_with("cube_pull")) {
+    if(choice == "cube_pull") {
 	return functions::cube_pull;
     }
-    if(choice.starts_with("cube_push")) {
+    if(choice == "cube_push") {
 	return functions::cube_push;
     }
-
+    if(choice == "cube_push_x") {
+		std::cout << "Running cube_push_x" << std::endl;
+	return functions::cube_push_x;
+    }
     throw std::runtime_error("Unknown Neumann Condition: " + choice);
 }
 
