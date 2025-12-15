@@ -120,7 +120,7 @@ public:
     {
         // Create the mesh using dealii generator
 		Triangulation<dim> mesh_serial;
-		GridGenerator::subdivided_cylinder(mesh_serial, 10, 0.1, 1.0);
+		GridGenerator::subdivided_cylinder(mesh_serial, 20, 0.5, 5.0);
 
 		// Then, we copy the triangulation into the parallel one.
 		{

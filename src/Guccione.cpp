@@ -204,7 +204,7 @@ void Guccione::assemble_system() {
 				B[i][j] += 2 * b * ((E * m) * n) * m[i] * n[j];
                     		for (unsigned int k = 0; k< dim; k++) {
                     			for (unsigned int l = 0; l< dim; l++) {
-						D[k][l][i][j] += 2 * b * m[i] * n[j] * n[k] * m[l];
+						D[k][l][i][j] += 1.0 / 2.0 * b * (m[i] * n[j] + m[j] * n[i]) * (m[k] * n[l] + m[l] * n[k]);
 						//std::cout << k << l << i << j << ": " << D[k][l][i][j] << std::endl;
 					}
 				}
@@ -239,10 +239,9 @@ void Guccione::assemble_system() {
 						            (F * B)[i][j];
 					for (unsigned int n = 0; n < dim; n++){
 						for (unsigned int a = 0; a < dim; a++){
-
 					dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
 						         	F[k][a] * F[i][n] * 
-								(D[a][l][n][j]);
+								(D[a][l][j][n]);
 						}
 					}
 							//	D[j][a][n][l] + D[a][j][n][l]);

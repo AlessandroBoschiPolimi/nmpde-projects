@@ -68,6 +68,12 @@ constexpr auto cube_pull = [](const Point<dim> &p) {
     else
 	    return Point<dim>(0, 0, -tau);
 };
+constexpr auto rod_pull = [](const Point<dim> &p) {
+    const double tau = TestNeumannConditions::parameter;
+    return Point<dim>(0, 0, tau * (int)(p[2] < -0.2));
+
+};
+
 
 constexpr auto cube_push = [](const Point<dim> &p) {
     constexpr double small_tol = 1e-13;
