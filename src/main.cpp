@@ -26,8 +26,7 @@ int main(int argc, char *argv[])
     if (argc < 3)
     {
         pcout << "Provide file with work\n";
-	pcout << "Usage: ./PDE-06 <path/to/config_file.txt> [FORCING_TERM <0|1>]"
-			<< std::endl;
+	    pcout << "Usage: ./PDE-06 <path/to/config_file.txt> [FORCING_TERM <0|1>]" << std::endl;
         return 1;
     }
 
@@ -61,8 +60,10 @@ int main(int argc, char *argv[])
             mesh_src = std::make_unique<RodGenerator<dim>>();
         }
      
+        std::cout << "Solver iterations limit " << w.iterations << '\n';
+
         std::map<types::boundary_id, const Function<dim>*> boundary_functions;
-	Functions::ZeroFunction<dim> zero_function(dim);
+    	Functions::ZeroFunction<dim> zero_function(dim);
 
         pcout << "Diritto boundary on ids:";
         for (auto d : w.D_entries)
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
             pcout << ' ' << d.value;
             boundary_functions[d.value] = &zero_function;
         }
-	pcout << "\n";
+	    pcout << "\n";
         pcout << "UomoNuovo boundary on ids:";
         for (auto d : w.N_values)
             pcout << ' ' << d;
@@ -79,36 +80,36 @@ int main(int argc, char *argv[])
 
         std::function<Point<dim>(const Point<dim> &)> h;
 
-	try {
-	    if(w.N_data == "") {
-		pcout << "No parameter for Neumann Condition found.\n" <<
-			    "Falling back to standard: tau = 0.5" << std::endl;
-		TestNeumannConditions::initialize();
-	    } else {
-		TestNeumannConditions::initialize(std::stod(w.N_data));
-	    }
-	    h = TestNeumannConditions::choose_neumann_function(w.N_label);
-	} catch(std::invalid_argument &ia) {
-		pcout << "Invalid Argument: " << ia.what() << std::endl;
-	} catch(std::runtime_error &e) { 
+        try {
+            if(w.N_data == "") {
+                pcout << "No parameter for Neumann Condition found.\n"
+                    << "Falling back to standard: tau = 0.5" << std::endl;
+                TestNeumannConditions::initialize();
+            } else {
+                TestNeumannConditions::initialize(std::stod(w.N_data));
+            }
+            h = TestNeumannConditions::choose_neumann_function(w.N_label);
+        } catch(std::invalid_argument &ia) {
+            pcout << "Invalid Argument: " << ia.what() << std::endl;
+        } catch(std::runtime_error &e) { 
             pcout << e.what() << " skipping work" << std::endl;
             continue;
-	} 
+        } 
 
-	// TODO: fix/add forcing term to work
+        // TODO: fix/add forcing term to work
         if (w.material == Work::MaterialType::NeoHooke)
         {
             pcout << "NeoHooke Problem\n";
-	    const unsigned int C = w.C_param; //Pa
-	    const unsigned int lambda = w.lambda_param; //Pa
+            const unsigned int C = w.C_param; //Pa
+            const unsigned int lambda = w.lambda_param; //Pa
             NeoHooke problem = NeoHooke(
-			    std::move(mesh_src), r, 
-			    boundary_functions, h, 
-			    w.N_values, select_forcing_term(argv[2]),
-			    w.output_filename,
-			    pcout, mpi_rank,
-			    C, lambda
-			);
+                std::move(mesh_src), r, 
+                boundary_functions, h, 
+                w.N_values, select_forcing_term(argv[2]),
+                w.output_filename, w.iterations,
+                pcout, mpi_rank,
+                C, lambda
+            );
             problem.setup();
             problem.solve();
             problem.output();
@@ -117,28 +118,32 @@ int main(int argc, char *argv[])
         }
         else
         {
-	    const double param_c = w.C_param;
-	    const std::array<double, 9> param_b = w.B_param;
-	    const AnisotropicFunctionType aniso_fun = [&w](const Point<dim>&){ 
-				return std::array<Point<dim>, dim>(
-					{w.aniso_fun_points[0], w.aniso_fun_points[1], w.aniso_fun_points[2]}
-				);
-			};
-	    Guccione problem = Guccione(
-		 std::move(mesh_src), r,
-		 boundary_functions, h,
-		 w.N_values, select_forcing_term(argv[2]),
-		 w.output_filename,
-		 pcout, mpi_rank,
-		 param_c, param_b,
-		 aniso_fun
-	    );
-	    problem.setup();
+            pcout << "Guccione Problem\n";
+            const double param_c = w.C_param;
+            const std::array<double, 9> param_b = w.B_param;
+            const AnisotropicFunctionType aniso_fun = [&w](const Point<dim>&){ 
+                    return std::array<Point<dim>, dim>(
+                        { w.aniso_fun_points[0], w.aniso_fun_points[1], w.aniso_fun_points[2] }
+                    );
+                };
+
+            std::cout << "alpha: " << w.alpha_param << '\n';
+
+            Guccione problem = Guccione(
+                std::move(mesh_src), r,
+                boundary_functions, h,
+                w.N_values, select_forcing_term(argv[2]),
+                w.output_filename, w.iterations,
+                pcout, mpi_rank,
+                param_c, param_b,
+                aniso_fun, w.alpha_param
+            );
+            problem.setup();
             problem.solve();
             problem.output();
 
             pcout << "\n\n\n\n";
-	}
+        }
     }
 
     return 0;

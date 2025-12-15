@@ -287,7 +287,7 @@ void NeoHooke::assemble_system() {
 
 void NeoHooke::solve_system() {
 
-    SolverControl solver_control(1000000, 1e-6 * residual_vector.l2_norm());
+    SolverControl solver_control(iterations, 1e-6 * residual_vector.l2_norm());
 
     SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
     
@@ -335,6 +335,11 @@ void NeoHooke::solve() {
 void NeoHooke::output() const {
     pcout << "===============================================" << std::endl;
 
+	{
+		std::filesystem::path p(output_filename);
+		std::filesystem::create_directories(p.parent_path());
+	}
+	
     std::vector<std::string> solution_names(dim, "displacement");
 
     std::vector<DataComponentInterpretation::DataComponentInterpretation>

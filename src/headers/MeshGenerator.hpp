@@ -5,6 +5,8 @@
 
 #include <deal.II/grid/grid_generator.h>
 
+#include <fstream>
+
 using namespace dealii;
 
 enum Type

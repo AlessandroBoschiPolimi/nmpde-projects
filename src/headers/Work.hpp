@@ -14,13 +14,14 @@ struct Work {
     GeometryType geometry;
     std::optional<std::string> filename; // only for file
     std::string output_filename;
+    int iterations = 0;
 
     std::unordered_set<int> N_values;
     std::string N_label;
     std::string N_data;
 
     double lambda_param;
-    double C_param;
+    double C_param, alpha_param;
     std::array<double, 9> B_param;
     std::array<Point<dim>, dim> aniso_fun_points;
 

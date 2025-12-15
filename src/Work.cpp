@@ -102,6 +102,18 @@ std::vector<Work> parse_file(const std::string& path) {
             else throw std::runtime_error("Provide output filename as third line");
         }
 
+        /* it line */
+        line = next_line();
+        {
+            std::stringstream ss(line);
+            std::string word;
+            ss >> word;
+
+            if (word == "it")
+                ss >> sec.iterations;
+            else throw std::runtime_error("Provide iteration count as fourth line");
+        }
+
         /* N line */
         line = next_line();
         if (line.empty() || line[0] != 'N')
@@ -127,13 +139,11 @@ std::vector<Work> parse_file(const std::string& path) {
             if (line.empty())
                 continue;
 
-	    if (sec.material == Work::MaterialType::Guccione 
-		&& line[0] == 'c')
-		break;
+            if (sec.material == Work::MaterialType::Guccione && line[0] == 'c')
+               break;
 
-	    if (sec.material == Work::MaterialType::NeoHooke
-		&& line[0] == 'C')
-		break;
+            if (sec.material == Work::MaterialType::NeoHooke && line[0] == 'C')
+                break;
 
             if (line[0] != 'D')
                 throw std::runtime_error("Expected D line");
@@ -179,43 +189,52 @@ std::vector<Work> parse_file(const std::string& path) {
 
 	    /* c param */
 	    {
-		if (line.empty() || line[0] != 'c')
-		    throw std::runtime_error("Expected c line");
-		toks = split(line, " ");
-		sec.C_param = std::stod(toks[1]);
+            if (line.empty() || line[0] != 'c')
+                throw std::runtime_error("Expected c line");
+            toks = split(line, " ");
+            sec.C_param = std::stod(toks[1]);
 	    }
 
 	    line = next_line();
 	    /* b param */
 	    {
-		if (line.empty() || line[0] != 'b')
-		    throw std::runtime_error("Expected b line");
-		toks = split(line, " ");
+            if (line.empty() || line[0] != 'b')
+                throw std::runtime_error("Expected b line");
+            toks = split(line, " ");
 
-		for(int i = 1; i < 10; i++) {
-		    sec.B_param[i-1] = std::stod(toks[i]);
-		}
+            for(int i = 1; i < 10; i++) {
+                sec.B_param[i-1] = std::stod(toks[i]);
+            }
+	    }
+
+	    line = next_line();
+        /* alpha param */
+	    {
+            if (line.empty() || line[0] != 'a')
+                throw std::runtime_error("Expected alpha line");
+            toks = split(line, " ");
+            sec.alpha_param = std::stod(toks[1]);
 	    }
 
 	    line = next_line();
 	    /* aniso fun */
 	    {
 	    	if (line.empty())
-		    throw std::runtime_error("Expected anisotropic function line");
-		toks = split(line, " ");
+    		    throw std::runtime_error("Expected anisotropic function line");
+            toks = split(line, " ");
 
-		if(toks[0] != "anfun")
-		    throw std::runtime_error("Expected anisotropic function line");
+            if(toks[0] != "anfun")
+                throw std::runtime_error("Expected anisotropic function line");
 
-		std::vector<std::string> point_val;
-		for(int i = 1; i < 4; i++) {
-		    point_val = split(toks[i], ",");
-		    sec.aniso_fun_points[i-1] = Point<dim>(
-			std::stod(point_val[0]), 
-			std::stod(point_val[1]), 
-			std::stod(point_val[2])
-		    );
-		}
+            std::vector<std::string> point_val;
+            for(int i = 1; i < 4; i++) {
+                point_val = split(toks[i], ",");
+                sec.aniso_fun_points[i-1] = Point<dim>(
+                    std::stod(point_val[0]), 
+                    std::stod(point_val[1]), 
+                    std::stod(point_val[2])
+                );
+            }
 	    }
 	}
 

@@ -83,7 +83,8 @@ protected:
     const unsigned int mpi_rank;
     const ConditionalOStream pcout;
 
-    std::string output_filename;
+    const std::string output_filename;
+    const int iterations = 10000;
 
     virtual void assemble_system() = 0;
     virtual void solve_system() = 0;
@@ -96,22 +97,24 @@ public:
             const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
             const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
             const std::unordered_set<int>& neumann_ids_,
-	    const ForcingTermType &forcing_term_,
+	        const ForcingTermType &forcing_term_,
             const std::string& output_filename_,
-	    const ConditionalOStream pcout_,
-	    const unsigned int mpi_rank_
+            const int iterations_,
+	        const ConditionalOStream pcout_,
+	        const unsigned int mpi_rank_
     ) :
         mesh_generator(std::move(mesh_generator_)),
         r(r_),
         neumann_conds(neum_funcs_),
         neumann_ids(neumann_ids_),
         dirichelet_conds(boundary_functions_),
-	forcing_term(forcing_term_),
-	mesh(MPI_COMM_WORLD),
+    	forcing_term(forcing_term_),
+	    mesh(MPI_COMM_WORLD),
         mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
-	mpi_rank(mpi_rank_),
-	pcout(pcout_),
-        output_filename(output_filename_)
+	    mpi_rank(mpi_rank_),
+	    pcout(pcout_),
+        output_filename(output_filename_),
+        iterations(iterations_)
     {}
     
     virtual void setup() = 0;
