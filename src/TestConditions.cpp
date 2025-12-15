@@ -22,8 +22,11 @@ const std::function<Point<dim> (const Point<dim> &)>
     if (choice.starts_with("bowl")) {
 	return functions::bowl_pull_out;
     }
-    if(choice.starts_with("cube")) {
+    if(choice.starts_with("cube_pull")) {
 	return functions::cube_pull;
+    }
+    if(choice.starts_with("cube_push")) {
+	return functions::cube_push;
     }
 
     throw std::runtime_error("Unknown Neumann Condition: " + choice);
