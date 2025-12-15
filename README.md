@@ -54,18 +54,69 @@ It requires gmsh installed
 ## Launch Command
 
 To run the command run:
-`./PDE-06 <mesh_type> <function_name>`
+`./PDE-06 <work_file> <forcing_term: 0|1>`
 
-### Mesh types
+The work file contains the execution parameters, which have to be provided in the following format.
 
-> Not properly parsed
+	-----
+	<NeoHooke | Guccione>                         // material type
+	<file <filename> | cube | rod>                // mesh and optional input filename
+	out <filename>                                // output filename
+	it <integer>                                  // linear solver max iterations   
+	N <csv, of, integers>                         // ids of Neumann boundaries
+	<Neumann function> [parameters]               // see later
+	D <boundary_id> <Dirichlet function>          // ids of Dirichlet boundaries, see later
+	[D <boundary_id> <Dirichlet function> ...]
+	<material parameters>
 
-- `rod`
-- `cube`
+Note: comments are NOT supported by out parser.
 
-### Function Names
+It's possible to submit multiple jobs in the same execution, each must start with a line with exactly 5 '-'.
 
-> Not properly parsed
+The possible values for `Neumann function` are
+- `bowl_pull_out` representing a force pulling in the direction normal to surface of an ellipsoid, and as parameters expects a double representing the scaling of the force.
+- `todo`
 
-- `cube_pull`
-- `rod_bend`
+The possible values for `Dirichlet function` are
+- `zero`: homogeneous Dirichlet condition
+Each Dirichlet boundary must be on a different line, since they can have different `Dirichlet function`.
+
+The `material parameters` for NeoHooke are
+- `C <double>`: controls resistance to isochoric (shape-changing) deformation
+- `l <double>`: represents volumetric (compressibility) response
+
+The `material parameters` for Guccione are
+- `c <double>`: todo: meaning
+- `b <9 space separated integers>`: 
+- `a <double>`: 
+- `anfun <int>,<int>,<int> <int>,<int>,<int> <int>,<int>,<int>`: 
+
+There is very little validation on the input, pls be gentle.
+
+Below an example using NeoHooke law, on the mesh provided in file ../mesh/mesh.msh
+
+	------
+	NeoHooke
+	file ../mesh/mesh.msh
+	out ../out/acorn
+	it 10000
+	N 1
+	bowl_pull_out -0.5
+	D 2 zero
+	D 3 zero
+	C 1
+	l 2
+
+	-----
+	Guccione
+	cube
+	out ../out/guccione
+	it 10000
+	N 1
+	cube_pull 0.5
+	D 2 zero
+	D 3 zero
+	c 1
+	b 1 2 3 4 5 6 7 8 9
+	a 0.4
+	anfun 1,0,0 0,1,0 0,0,1

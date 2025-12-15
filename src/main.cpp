@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 
     std::vector<Work> work = parse_file(filename);
 
+    std::cout << "Work size " << work.size() << '\n';
     for (auto& w : work)
     {
         pcout << "Starting work:\n";
@@ -102,6 +103,8 @@ int main(int argc, char *argv[])
             pcout << "NeoHooke Problem\n";
             
             Work::NeoHookeData params = std::get<Work::NeoHookeData>(w.problem_params);
+            pcout << "C = " << params.C << ", lambda " << params.lambda << '\n';
+
             NeoHooke problem = NeoHooke(
                 std::move(mesh_src), r, 
                 boundary_functions, h, 
@@ -121,13 +124,17 @@ int main(int argc, char *argv[])
             pcout << "Guccione Problem\n";
             
             Work::GuccioneData params = std::get<Work::GuccioneData>(w.problem_params);
+            pcout << "c = " << params.c << ", alpha " << params.alpha << '\n';
+            pcout << "b = ";
+            for (int i = 0; i < params.b.size() - 1; i++)
+                pcout << params.b[i] << ", ";
+            pcout << params.b[params.b.size() - 1] << '\n';
+
             const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){ 
                     return std::array<Point<dim>, dim>(
                         { params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] }
                     );
                 };
-
-            pcout << "alpha: " << params.alpha << '\n';
 
             Guccione problem = Guccione(
                 std::move(mesh_src), r,
