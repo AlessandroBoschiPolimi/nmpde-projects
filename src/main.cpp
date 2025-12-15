@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
             mesh_src = std::make_unique<RodGenerator<dim>>();
         }
      
-        std::cout << "Solver iterations limit " << w.iterations << '\n';
+        pcout << "Solver iterations limit " << w.iterations << '\n';
 
         std::map<types::boundary_id, const Function<dim>*> boundary_functions;
     	Functions::ZeroFunction<dim> zero_function(dim);
@@ -100,15 +100,15 @@ int main(int argc, char *argv[])
         if (w.material == Work::MaterialType::NeoHooke)
         {
             pcout << "NeoHooke Problem\n";
-            const unsigned int C = w.C_param; //Pa
-            const unsigned int lambda = w.lambda_param; //Pa
+            
+            Work::NeoHookeData params = std::get<Work::NeoHookeData>(w.problem_params);
             NeoHooke problem = NeoHooke(
                 std::move(mesh_src), r, 
                 boundary_functions, h, 
                 w.N_values, select_forcing_term(argv[2]),
                 w.output_filename, w.iterations,
                 pcout, mpi_rank,
-                C, lambda
+                params.C, params.lambda
             );
             problem.setup();
             problem.solve();
@@ -119,15 +119,15 @@ int main(int argc, char *argv[])
         else
         {
             pcout << "Guccione Problem\n";
-            const double param_c = w.C_param;
-            const std::array<double, 9> param_b = w.B_param;
-            const AnisotropicFunctionType aniso_fun = [&w](const Point<dim>&){ 
+            
+            Work::GuccioneData params = std::get<Work::GuccioneData>(w.problem_params);
+            const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){ 
                     return std::array<Point<dim>, dim>(
-                        { w.aniso_fun_points[0], w.aniso_fun_points[1], w.aniso_fun_points[2] }
+                        { params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] }
                     );
                 };
 
-            std::cout << "alpha: " << w.alpha_param << '\n';
+            pcout << "alpha: " << params.alpha << '\n';
 
             Guccione problem = Guccione(
                 std::move(mesh_src), r,
@@ -135,8 +135,8 @@ int main(int argc, char *argv[])
                 w.N_values, select_forcing_term(argv[2]),
                 w.output_filename, w.iterations,
                 pcout, mpi_rank,
-                param_c, param_b,
-                aniso_fun, w.alpha_param
+                params.c, params.b,
+                aniso_fun, params.alpha
             );
             problem.setup();
             problem.solve();

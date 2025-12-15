@@ -163,36 +163,42 @@ std::vector<Work> parse_file(const std::string& path) {
 	
 	/* NeoHooke additional parameters */
 	if(sec.material == Work::MaterialType::NeoHooke) {
-	     std::vector<std::string> toks;
+	    std::vector<std::string> toks;
+
+        Work::NeoHookeData data;
 
 	    /* c param */
 	    {
-		if (line.empty() || line[0] != 'C')
-		    throw std::runtime_error("Expected C line");
-		toks = split(line, " ");
-		sec.C_param = std::stod(toks[1]);
+            if (line.empty() || line[0] != 'C')
+                throw std::runtime_error("Expected C line");
+            toks = split(line, " ");
+            data.C = std::stod(toks[1]);
 	    }
 
 	    line = next_line();
 	    /* lambda param */
 	    {
-		if (line.empty() || line[0] != 'l')
-		    throw std::runtime_error("Expected lambda line");
-		toks = split(line, " ");
-		sec.lambda_param = std::stod(toks[1]);
+            if (line.empty() || line[0] != 'l')
+                throw std::runtime_error("Expected lambda line");
+            toks = split(line, " ");
+            data.lambda = std::stod(toks[1]);
 	    }
+
+        sec.problem_params = data;
 	}
 	
 	/* Guccione additional parameters*/
 	if(sec.material == Work::MaterialType::Guccione) {
 	    std::vector<std::string> toks;
 
+        Work::GuccioneData data;
+
 	    /* c param */
 	    {
             if (line.empty() || line[0] != 'c')
                 throw std::runtime_error("Expected c line");
             toks = split(line, " ");
-            sec.C_param = std::stod(toks[1]);
+            data.c = std::stod(toks[1]);
 	    }
 
 	    line = next_line();
@@ -202,8 +208,8 @@ std::vector<Work> parse_file(const std::string& path) {
                 throw std::runtime_error("Expected b line");
             toks = split(line, " ");
 
-            for(int i = 1; i < 10; i++) {
-                sec.B_param[i-1] = std::stod(toks[i]);
+            for (int i = 1; i < 10; i++) {
+                data.b[i-1] = std::stod(toks[i]);
             }
 	    }
 
@@ -213,7 +219,7 @@ std::vector<Work> parse_file(const std::string& path) {
             if (line.empty() || line[0] != 'a')
                 throw std::runtime_error("Expected alpha line");
             toks = split(line, " ");
-            sec.alpha_param = std::stod(toks[1]);
+            data.alpha = std::stod(toks[1]);
 	    }
 
 	    line = next_line();
@@ -227,15 +233,17 @@ std::vector<Work> parse_file(const std::string& path) {
                 throw std::runtime_error("Expected anisotropic function line");
 
             std::vector<std::string> point_val;
-            for(int i = 1; i < 4; i++) {
+            for (int i = 1; i < 4; i++) {
                 point_val = split(toks[i], ",");
-                sec.aniso_fun_points[i-1] = Point<dim>(
+                data.aniso_fun_points[i-1] = Point<dim>(
                     std::stod(point_val[0]), 
                     std::stod(point_val[1]), 
                     std::stod(point_val[2])
                 );
             }
 	    }
+
+        sec.problem_params = data;
 	}
 
 	while(true) {

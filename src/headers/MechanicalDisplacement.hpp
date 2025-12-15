@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <filesystem>
 
 #include "MeshGenerator.hpp"
 #include "defs.hpp"
