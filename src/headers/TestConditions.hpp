@@ -95,13 +95,15 @@ constexpr auto cube_push = [](const Point<dim> &p) {
 	    return Point<dim>(0, 0, 0);
 };
 
-constexpr auto cube_push_x = [](const Point<dim> &p) {
+constexpr auto cube_push_z = [](const Point<dim> &p) {
     if(p[1] > 0.4 &&  p[1] < 0.6 && p[0] > 0.4 && p[0] < 0.6)
 	return Point<dim>(0, 0, TestNeumannConditions::parameter);
-    else return Point<dim>(0,0,0);	
+    else 
+	return Point<dim>(0,0,0);	
 };
 
-constexpr auto cube_twist = [](const Point<dim> &p) {
+constexpr auto force_cube_push_z = [](const Point<dim> &p) {
+    return Point<dim>(0,0,TestNeumannConditions::parameter);
 };
 
 // Applies a force in the normal direction w.r.t. surface

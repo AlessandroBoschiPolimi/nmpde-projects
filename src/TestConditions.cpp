@@ -27,10 +27,15 @@ const std::function<Point<dim> (const Point<dim> &)>
     if(choice == "cube_push") {
 	return functions::cube_push;
     }
-    if(choice == "cube_push_x") {
-		std::cout << "Running cube_push_x" << std::endl;
-	return functions::cube_push_x;
+    if(choice == "cube_push_z") {
+		std::cout << "Running cube_push_z" << std::endl;
+	return functions::cube_push_z;
     }
+    if(choice == "force_cube_push_z") {
+	std::cout << "Running force_cube_push_z" << std::endl;
+	return functions::force_cube_push_z;
+    }
+
     throw std::runtime_error("Unknown Neumann Condition: " + choice);
 }
 
