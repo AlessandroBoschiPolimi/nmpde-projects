@@ -6,6 +6,7 @@
 build/*
 out/*
 mesh/*
+scripts/personal_config_*.txt
 
 
 # User-specific files

@@ -165,7 +165,10 @@ void Guccione::assemble_system() {
     const FEValuesExtractors::Vector displacement(0);
 
 
-    for ( const auto &cell : dof_handler.active_cell_iterators() ) {
+    for (const auto &cell : dof_handler.active_cell_iterators()) {
+		if (!cell->is_locally_owned())
+			continue;
+
 		fe_values.reinit(cell);
 		cell_matrix = 0.0;
 		cell_rhs    = 0.0;

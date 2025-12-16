@@ -1,0 +1,59 @@
+-----
+NeoHooke
+cube
+out ../out/cube_push
+it 10000
+N 4
+cube_push 0.5
+D 5 zero
+C 1
+l 2
+
+
+-----
+NeoHooke
+cube
+out ../out/cube_pull
+it 10000
+N 4
+cube_pull 0.5
+D 5 zero
+C 1
+l 2
+
+
+-----
+NeoHooke
+file ../mesh/mesh.msh
+out ../out/acorn_squeeze
+it 10000
+N 1
+bowl -0.5
+D 2 zero
+D 3 zero
+C 1
+l 2
+
+-----
+NeoHooke
+file ../mesh/mesh.msh
+out ../out/acorn_expand
+it 10000
+N 3
+bowl 0.5
+D 1 zero
+D 2 zero
+C 1
+l 2
+
+-----
+NeoHooke
+file ../mesh/mesh.msh
+out ../out/acorn_implode
+it 10000
+N 3
+bowl -0.5
+D 1 zero
+D 2 zero
+C 1
+l 2

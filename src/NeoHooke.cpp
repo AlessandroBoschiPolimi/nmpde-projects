@@ -30,8 +30,6 @@
 using namespace pde;
 
 void NeoHooke::setup() {
-
-    // TODO: Read from mesh
     pcout << "===============================" << std::endl;
     
     // Create the mesh
@@ -122,8 +120,8 @@ void NeoHooke::setup() {
 
 
 void NeoHooke::assemble_system() {
-    const unsigned int dofs_per_cell	= fe->dofs_per_cell;
-    const unsigned int n_q		= quadrature->size();
+    const unsigned int dofs_per_cell = fe->dofs_per_cell;
+    const unsigned int n_q           = quadrature->size();
 
     FEValues<dim> fe_values(
 		*fe,
@@ -140,16 +138,16 @@ void NeoHooke::assemble_system() {
     );
 
 
-    FullMatrix<double>	cell_matrix(dofs_per_cell, dofs_per_cell);
-    Vector<double>	cell_rhs(dofs_per_cell);
+    FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
+    Vector<double> cell_rhs(dofs_per_cell);
 
     std::vector<types::global_cell_index> dof_indices(dofs_per_cell);
 
     jacobian_matrix = 0.0;
     residual_vector = 0.0;
 
-    std::vector<Tensor<1,dim, double>>	solution_loc(n_q);
-    std::vector<Tensor<2,dim, double>>	solution_gradient_loc(n_q);
+    std::vector<Tensor<1, dim, double>> solution_loc(n_q);
+    std::vector<Tensor<2, dim, double>> solution_gradient_loc(n_q);
     
 
     // Getting a view of the <1,dim> tensor from 0:dim-1
@@ -161,7 +159,10 @@ void NeoHooke::assemble_system() {
     const FEValuesExtractors::Vector displacement(0);
 
 
-    for ( const auto &cell : dof_handler.active_cell_iterators() ) {
+    for (const auto &cell : dof_handler.active_cell_iterators()) {
+		if (!cell->is_locally_owned())
+			continue;
+
 		fe_values.reinit(cell);
 		cell_matrix = 0.0;
 		cell_rhs    = 0.0;
@@ -169,23 +170,23 @@ void NeoHooke::assemble_system() {
 		fe_values[displacement].get_function_values(solution, solution_loc);
 		fe_values[displacement].get_function_gradients(solution, solution_gradient_loc);
 
-		for ( const unsigned int q : fe_values.quadrature_point_indices() ) {
+		for (const unsigned int q : fe_values.quadrature_point_indices()) {
 			// Compute the displacement tensor I + grad(d(k)) at quadr point q
-			Tensor<2,dim> displacement_tensor({{1,0,0},{0,1,0},{0,0,1}});
+			Tensor<2, dim> displacement_tensor({{1,0,0},{0,1,0},{0,0,1}});
 			displacement_tensor += solution_gradient_loc[q];
-			const Tensor<2,dim> inverse_transpose_displacement = transpose(invert(displacement_tensor));
-			//Compute determinant of the displacement tensor F
-			//I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
+			const Tensor<2, dim> inverse_transpose_displacement = transpose(invert(displacement_tensor));
+			// Compute determinant of the displacement tensor F
+			// I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
 			const double determinant_displacement = std::abs(determinant(displacement_tensor));
 
-			for ( const unsigned int i : fe_values.dof_indices() ) {
-			// base to describe v
-			const Tensor<2,dim> phi_i_grad = fe_values[displacement].gradient(i, q);
+			for (const unsigned int i : fe_values.dof_indices()) {
+				// base to describe v
+				const Tensor<2, dim> phi_i_grad = fe_values[displacement].gradient(i, q);
 
-				for ( const unsigned j : fe_values.dof_indices() ) {
+				for (const unsigned j : fe_values.dof_indices()) {
 					// base to describe delta
 					const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
-					const Tensor<2,dim> second_member = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
+					const Tensor<2, dim> second_member = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
 
 					// TODO: check correctness of the following multiplication
 					// and if there is an overloaded operator to do it
@@ -194,14 +195,14 @@ void NeoHooke::assemble_system() {
 							double_contract<0,0,1,1>(second_member , phi_i_grad)
 						) * fe_values.JxW(q);
 
-					//Add two additional terms arrising when lambda =/= 0
+					// Add two additional terms arrising when lambda =/= 0
 					
 					cell_matrix(i,j) += lambda * (
 							double_contract<0,0,1,1>(phi_j_grad, inverse_transpose_displacement) * 
 							double_contract<0,0,1,1>(inverse_transpose_displacement , phi_i_grad)
 						) * fe_values.JxW(q);
 
-					//Is the std log relly the best here?
+					// Is the std log relly the best here?
 					cell_matrix(i,j) -= lambda * std::log(determinant_displacement) *
 						double_contract<0,0,1,1>(second_member,phi_i_grad)
 						* fe_values.JxW(q);
@@ -224,10 +225,7 @@ void NeoHooke::assemble_system() {
 		}
 		
 		if (cell->at_boundary()) {
-			for (unsigned int face_number = 0; 
-				face_number < cell->n_faces();
-				face_number++) {
-
+			for (unsigned int face_number = 0; face_number < cell->n_faces(); face_number++) {
 				const unsigned int bound_id = cell->face(face_number)->boundary_id();
 
 				if (!cell->face(face_number)->at_boundary())
@@ -286,7 +284,6 @@ void NeoHooke::assemble_system() {
 }
 
 void NeoHooke::solve_system() {
-
     SolverControl solver_control(iterations, 1e-6 * residual_vector.l2_norm());
 
     SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
@@ -295,8 +292,7 @@ void NeoHooke::solve_system() {
     preconditioner.initialize(jacobian_matrix);
 
     solver.solve(jacobian_matrix, delta_owned, residual_vector, preconditioner);
-    pcout << "   " << solver_control.last_step() << " GMRES iterations"
-    	<< std::endl;
+    pcout << "   " << solver_control.last_step() << " GMRES iterations" << std::endl;
 }
 
 void NeoHooke::solve() {

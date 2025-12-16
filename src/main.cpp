@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
     std::vector<Work> work = parse_file(filename);
 
-    std::cout << "Work size " << work.size() << '\n';
+    pcout << "Work size " << work.size() << '\n';
     for (auto& w : work)
     {
         pcout << "Starting work:\n";
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             pcout << "NeoHooke Problem\n";
             
             Work::NeoHookeData params = std::get<Work::NeoHookeData>(w.problem_params);
-            pcout << "C = " << params.C << ", lambda " << params.lambda << '\n';
+            pcout << "C = " << params.C << ", lambda = " << params.lambda << '\n';
 
             NeoHooke problem = NeoHooke(
                 std::move(mesh_src), r, 
