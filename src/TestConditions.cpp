@@ -8,7 +8,78 @@ namespace pde {
 
 double TestNeumannConditions::parameter;
 
-// TODO: Implement this function
+// ---------------- FUNCTIONS --------------------------
+
+namespace functions {
+
+/// ---------------- CUBE SECTION -----------------
+
+/**
+* This is the function that we used until now to
+* pull the cube on x and y
+*/
+const auto cube_pull = [&tau = TestNeumannConditions::parameter](const Point<dim> &p) {
+    constexpr double small_tol = 1e-13;
+
+    if (std::abs(p[0]) < small_tol)
+	    return Point<dim>(-tau, 0, 0);
+    else if (std::abs(p[0]) > (1 - small_tol))
+	    return Point<dim>(tau, 0, 0);
+    else if (std::abs(p[1]) < small_tol)
+	    return Point<dim>(0, -tau, 0);
+    else if (std::abs(p[1]) > (1 - small_tol))
+	    return Point<dim>(0, tau, 0);
+    else if (std::abs(p[2]) < small_tol)
+	    return Point<dim>(0, 0, -tau);
+    else if (std::abs(p[2]) > (1 - small_tol))
+	    return Point<dim>(0, 0, tau);
+    else
+	    return Point<dim>(0, 0, 0);
+
+};
+
+const auto cube_push = [&tau = TestNeumannConditions::parameter](const Point<dim> &p) {
+    constexpr double small_tol = 1e-13;
+
+    if (std::abs(p[0]) < small_tol)
+	    return Point<dim>(tau, 0, 0);
+    else if (std::abs(p[0]) > (1 - small_tol))
+	    return Point<dim>(-tau, 0, 0);
+    else if (std::abs(p[1]) < small_tol)
+	    return Point<dim>(0, tau, 0);
+    else if (std::abs(p[1]) > (1 - small_tol))
+	    return Point<dim>(0, -tau, 0);
+    else if (std::abs(p[2]) < small_tol)
+	    return Point<dim>(0, 0, tau);
+    else if (std::abs(p[2]) > (1 - small_tol))
+	    return Point<dim>(0, 0, -tau);
+    else
+	    return Point<dim>(0, 0, 0);
+};
+
+
+/// --------------- BOWL SECTION ----------------
+
+// Applies a force in the normal direction w.r.t. surface
+// of an ellipsoid with semi-axes with the ratio 1:1:3. OUTGOING
+constexpr auto bowl_pull_out = [](const Point<dim> &p) {
+	const double tau = TestNeumannConditions::parameter;
+	double xx = p[0] * p[0], yy = p[1] * p[1], zz = p[2] * p[2];
+	return tau / std::sqrt(xx + yy + zz / 81.0) *
+		Point<dim>(p[0], p[1], p[2] / 9.0); // vector normal to the outer surface of the acorn;
+};
+
+/// -------------  ROD SECTION ----------------
+
+constexpr auto rod_pull = [](const Point<dim> &p) {
+    const double tau = TestNeumannConditions::parameter;
+    return Point<dim>(0, 0, tau * (int)(p[2] < -0.2));
+};
+
+
+
+}
+
 
 const std::function<Point<dim> (const Point<dim> &)> 
 	TestNeumannConditions::choose_neumann_function(std::string choice)
@@ -23,14 +94,6 @@ const std::function<Point<dim> (const Point<dim> &)>
     	return functions::rod_pull;
     if (choice == "cube_push")
     	return functions::cube_push;
-    if (choice == "cube_push_z") {
-		std::cout << "Running cube_push_z" << std::endl;
-	    return functions::cube_push_z;
-    }
-    if (choice == "force_cube_push_z") {
-        std::cout << "Running force_cube_push_z" << std::endl;
-        return functions::force_cube_push_z;
-    }
 
     throw std::runtime_error("Unknown Neumann Condition: " + choice);
 }

@@ -58,9 +58,11 @@ std::vector<Work> parse_file(const std::string& path) {
         if (line.empty())
             continue;
 
+	if(line[0] == '#') continue;
+
         if (line != "-----")
             throw std::runtime_error("Expected section separator '-----'");
-
+	
         Work sec;
 
         /* Material */
@@ -161,9 +163,9 @@ std::vector<Work> parse_file(const std::string& path) {
 	
         // if in here already read line
         
+        std::vector<std::string> toks;
         /* NeoHooke additional parameters */
         if(sec.material == Work::MaterialType::NeoHooke) {
-            std::vector<std::string> toks;
 
             Work::NeoHookeData data;
 
@@ -189,8 +191,6 @@ std::vector<Work> parse_file(const std::string& path) {
 	
 	    /* Guccione additional parameters*/
         if(sec.material == Work::MaterialType::Guccione) {
-            std::vector<std::string> toks;
-
             Work::GuccioneData data;
 
             /* c param */
@@ -245,17 +245,17 @@ std::vector<Work> parse_file(const std::string& path) {
 
             sec.problem_params = data;
         }
-
-        while (true) {
-            std::streampos pos = in.tellg();
-            if (!std::getline(in, line))
-                break;
-
-            if (line == "-----") {
-                in.seekg(pos);
-                break;
-            }
-        }
+        //
+        // while (true) {
+        //     std::streampos pos = in.tellg();
+        //     if (!std::getline(in, line))
+        //         break;
+        //
+        //     if (line == "-----") {
+        //         in.seekg(pos);
+        //         break;
+        //     }
+        // }
 
     	sections.push_back(std::move(sec));
     }

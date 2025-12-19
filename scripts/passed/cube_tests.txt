@@ -1,0 +1,49 @@
+# Pushing from one side (z) and opposite blocked
+-----
+NeoHooke
+cube
+out ../out/neo_cube_n_push_4_d_zero_5_c1_l2
+it 2000
+N 4
+cube_push
+D 5 zero
+C 1
+l 2
+
+# Pushing from one side and two adj blocked
+-----
+NeoHooke
+cube
+out ../out/neo_cube_n_push_3_d_zero_1_0_c1_l2
+it 10000
+N 3
+cube_push
+D 1 zero
+D 0 zero
+C 1
+l 2
+
+# Pushing from two sides
+-----
+NeoHooke
+cube
+out ../out/neo_cube_n_push_0_1_c1_l2
+it 10000
+N 0, 1
+cube_push 0.2
+C 1
+l 2
+
+# Pulling from one side and two adj blocked
+-----
+NeoHooke
+cube
+out ../out/neo_cube_n_pull_2_d_zero_1_0_c1_l2
+it 10000
+N 2
+cube_pull 0.7
+D 1 zero
+D 0 zero
+C 1
+l 2
+

@@ -1,0 +1,37 @@
+# Pulling from two sides
+-----
+NeoHooke
+cube
+out ../out/neo_cube_n_pull_4_5_c1_l2
+it 10000
+N 4, 5
+cube_pull 0.4
+C 1
+l 2
+
+# Pushing from four sides
+-----
+NeoHooke
+cube
+out ../out/neo_cube_n_push_0_1_2_3_c1_l2
+it 10000
+N 0, 1, 2, 3
+cube_push 0.2
+D 4 zero
+D 5 zero
+C 1
+l 2
+
+# Pulling from four sides
+-----
+NeoHooke
+cube
+out ../out/neo_cube_n_pull_0_1_2_3_c1_l2
+it 10000
+N 0, 1, 2, 3
+cube_push 0.2
+D 4 zero
+D 5 zero
+C 1
+l 2
+

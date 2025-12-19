@@ -16,17 +16,11 @@ int main(int argc, char *argv[])
     using namespace pde;
     constexpr unsigned int r = 1;
 
-    Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
-
-    // This MPI process.
-    const unsigned int mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
-    // Parallel output stream.
-    const ConditionalOStream pcout(std::cout, mpi_rank == 0);
 
     if (argc < 3)
     {
-        pcout << "Provide file with work\n";
-	    pcout << "Usage: ./PDE-06 <path/to/config_file.txt> [FORCING_TERM <0|1>]" << std::endl;
+	std::cout << "Provide file with work\n";
+	std::cout << "Usage: ./PDE-06 <path/to/config_file.txt> [FORCING_TERM <0|1>]" << std::endl;
         return 1;
     }
 
@@ -34,13 +28,22 @@ int main(int argc, char *argv[])
 
     if (!std::filesystem::exists(filename))
     {
-        pcout << "File provided doesn't exist\n";
+	std::cout << "File provided doesn't exist\n";
         return 1;
     }
 
     std::vector<Work> work = parse_file(filename);
 
-    pcout << "Work size " << work.size() << '\n';
+    std::cout << "Work size " << work.size() << '\n';
+
+    Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
+
+    // This MPI process.
+    const unsigned int mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
+    // Parallel output stream.
+    const ConditionalOStream pcout(std::cout, mpi_rank == 0);
+
+
     for (auto& w : work)
     {
         pcout << "Starting work:\n";
