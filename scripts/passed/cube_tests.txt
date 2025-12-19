@@ -2,7 +2,7 @@
 -----
 NeoHooke
 cube
-out ../out/test/neo_cube_n_push_4_d_zero_5_c1_l2
+out ../out/neo_cube_n_push_4_d_zero_5_c1_l2
 it 2000
 N 4
 cube_push
