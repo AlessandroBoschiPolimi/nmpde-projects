@@ -414,12 +414,12 @@ void Guccione::output() const {
 
     data_out.build_patches();
 
-    // Finally, we need to write in a format that supports parallel output. This
-    // can be achieved in multiple ways (e.g. XDMF/H5). We choose VTU/PVTU files.
-    data_out.write_vtu_with_pvtu_record(/* folder = */ "./",
-				      /* basename = */ output_filename,
-				      /* index = */ 0,
-				      MPI_COMM_WORLD);
+    std::filesystem::path output_path = output_filename;
+	std::filesystem::path parent_path = output_path.parent_path();
+	parent_path /= ""; // ensures '/' at the end of parent_path
+	std::filesystem::path filename = output_path.filename();
+
+    data_out.write_vtu_with_pvtu_record(parent_path.string(), filename.string(), 0, MPI_COMM_WORLD);
 
     pcout << "Output written to " << output_filename << std::endl;
 
