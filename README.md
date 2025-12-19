@@ -69,7 +69,7 @@ The work file contains the execution parameters, which have to be provided in th
 	[D <boundary_id> <Dirichlet function> ...]
 	<material parameters>
 
-Note: comments are NOT supported by out parser.
+Note: comments are now supported by our parser, but it ignores only lines starting with '#'.
 
 It's possible to submit multiple jobs in the same execution, each must start with a line with exactly 5 '-'.
 
@@ -79,6 +79,7 @@ The possible values for `Neumann function` are
 
 The possible values for `Dirichlet function` are
 - `zero`: homogeneous Dirichlet condition
+
 Each Dirichlet boundary must be on a different line, since they can have different `Dirichlet function`.
 
 The `material parameters` for NeoHooke are

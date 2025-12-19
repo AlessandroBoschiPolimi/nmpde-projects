@@ -23,7 +23,6 @@ public:
 
     virtual void Generate(parallel::fullydistributed::Triangulation<dim>& mesh) const = 0;
     virtual Type ElementType() const = 0;
-    // virtual bool OnNeumannBoundary(const int id) const = 0;
 };
 
 template <int dim>
@@ -55,8 +54,6 @@ public:
     }
 
     Type ElementType() const override { return Type::Tetrahedra; }
-
-    // bool OnNeumannBoundary(const int id) const override { return id == outside_id; }
 
 public:
     static constexpr int outside_id = 1, top_id = 2, inside_id = 3;
@@ -100,14 +97,10 @@ public:
 			const auto construction_data = TriangulationDescription::Utilities::create_description_from_triangulation(mesh_serial, MPI_COMM_WORLD);
 			mesh.create_triangulation(construction_data);
 		}
-
-		// Notice that we write here the number of *global* active cells (across all
-		// processes).
     }
 
     Type ElementType() const override { return Type::Hexahedra; }
 
-    // bool OnNeumannBoundary(const int id) const override { return !(id == 4 || id == 5); }
 };
 
 template <int dim>
@@ -128,13 +121,9 @@ public:
 			const auto construction_data = TriangulationDescription::Utilities::create_description_from_triangulation(mesh_serial, MPI_COMM_WORLD);
 			mesh.create_triangulation(construction_data);
 		}
-
-		// Notice that we write here the number of *global* active cells (across all
-		// processes).
     }
 
     Type ElementType() const override { return Type::Hexahedra; }
 
-    // bool OnNeumannBoundary(const int id) const override { return !(id == left_id || id == right_id); }
     static constexpr int hull_id = 0, left_id = 1, right_id = 2;
 };

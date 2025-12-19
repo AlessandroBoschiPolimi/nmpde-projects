@@ -1,3 +1,7 @@
+# this file is for random executions
+# if you want to keep an execution configuration that won't be altered by other people
+# use "personal_config_*.txt", it's gitignored
+
 -----
 NeoHooke
 cube

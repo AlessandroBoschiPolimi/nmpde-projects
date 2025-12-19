@@ -2,7 +2,7 @@
 -----
 NeoHooke
 cube
-out ../out/neo_cube_n_pull_2_d_zero_3_c1_l2
+out ../out/neo/cube/n_pull_2_d_zero_3_c1_l2
 it 3000
 N 2
 cube_pull
@@ -12,7 +12,7 @@ l 2
 -----
 NeoHooke
 cube
-out ../out/neo_cube_n_pull_2_d_zero_3_c10_l100
+out ../out/neo/cube/n_pull_2_d_zero_3_c10_l100
 it 3000
 N 2
 cube_pull

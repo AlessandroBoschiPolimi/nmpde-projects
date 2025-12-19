@@ -60,7 +60,7 @@ const auto cube_push = [&tau = TestNeumannConditions::parameter](const Point<dim
 
 /// --------------- BOWL SECTION ----------------
 
-// Applies a force in the normal direction w.r.t. surface
+// Applies a force with modulus 'tau' in the normal direction w.r.t. surface
 // of an ellipsoid with semi-axes with the ratio 1:1:3. OUTGOING
 constexpr auto bowl_pull_out = [](const Point<dim> &p) {
 	const double tau = TestNeumannConditions::parameter;
