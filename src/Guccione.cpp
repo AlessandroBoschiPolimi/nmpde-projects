@@ -65,8 +65,13 @@ void Guccione::setup() {
 			<< std::endl;
 
 		// TODO: Check that these quadrature are correct enough
-		quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
-		quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
+		if (mesh_generator->ElementType() == Type::Tetrahedra) {
+			quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
+			quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
+		} else {
+			quadrature = std::make_unique<QGauss<dim>>(r + 1);
+			quadrature_boundary = std::make_unique<QGauss<dim - 1>>(r + 1);
+		}
 
 		pcout << "  Quadrature points per cell = " << quadrature->size() << std::endl;
     }
@@ -240,20 +245,25 @@ void Guccione::assemble_system() {
 		}
 	    }
             // build P
-            Tensor<2, dim> P;
-	    P = param_c / 2.0 * std::exp(Q) * F * B;
+	    Tensor<2, dim> P;
+            Tensor<2, dim> Ft = transpose(invert(F));
+	    double det = std::abs(determinant(F));
+	    double B_modulus = 0;
+	    P = param_c / 2.0 * std::exp(Q) * F * B + B_modulus / 2.0 * (det * std::log(det) + det - 1) * Ft;
             // compute dP/dF
 	    Tensor<4, dim> dPdF;
 	    for (unsigned int k = 0; k < dim; ++k){
 	    	for (unsigned int l = 0; l < dim; ++l){
 	    		for (unsigned int i = 0; i < dim; ++i){
 	    			for (unsigned int j = 0; j < dim; ++j){
+					dPdF[k][l][i][j] -= B_modulus / 2.0 * Ft[i][l] * Ft[k][j]  * (det * std::log(det) + det - 1);
+					dPdF[k][l][i][j] += B_modulus / 2.0 * Ft[k][l] * Ft[i][j] * det * (std::log(det) + 2);
 	    				if (k == i){
 						dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
 							(B[l][j]);
 					}
-	    				dPdF[k][l][i][j] += P[k][l]*
-						            (F * B)[i][j];
+	    				dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q)*
+						            (F * B)[k][l] * (F * B)[i][j];
 					for (unsigned int n = 0; n < dim; n++){
 						for (unsigned int a = 0; a < dim; a++){
 					dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
@@ -391,6 +401,7 @@ void Guccione::solve() {
 		if (residual_norm <= residual_tolerance) break;
 		
 		solve_system();
+		delta_owned *= param_alpha;
 		solution_owned += delta_owned;
 		solution = solution_owned;
 
