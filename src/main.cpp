@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         pcout << "Diritto boundary on ids:";
         for (auto d : w.D_entries)
         {
-            pcout << ' ' << d.value;
+            pcout << ' ' << d.value << ' ' << d.function;
             if (d.function == "zero")
                 boundary_functions[d.value] = &zero_function;
             else if (d.function == "sin")
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
         std::function<Point<dim>(const Point<dim> &)> h;
 
         try {
-            if(w.N_data == "") {
+            if (w.N_data == "") {
                 pcout << "No parameter for Neumann Condition found.\n"
                     << "Falling back to standard: tau = 0.5" << std::endl;
                 TestNeumannConditions::initialize();

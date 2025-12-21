@@ -59,8 +59,13 @@ void NeoHooke::setup() {
 		pcout << "  DoFs per cell              = " << fe->dofs_per_cell << std::endl;
 
 		// TODO: Check that these quadrature are correct enough
-		quadrature = std::make_unique<QGauss<dim>>(r + 1);
-		quadrature_boundary = std::make_unique<QGauss<dim - 1>>(r + 1);
+		if (mesh_generator->ElementType() == Type::Tetrahedra) {
+			quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
+			quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
+		} else {
+			quadrature = std::make_unique<QGauss<dim>>(r + 1);
+			quadrature_boundary = std::make_unique<QGauss<dim - 1>>(r + 1);
+		}
 
 		pcout << "  Quadrature points per cell = " << quadrature->size() << std::endl;
     }
@@ -305,11 +310,12 @@ void NeoHooke::assemble_system() {
 
     {
 		std::map<types::global_dof_index, double> boundary_values;
+		VectorTools::interpolate_boundary_values(dof_handler, dirichelet_conds, boundary_values);
 
-		VectorTools::interpolate_boundary_values(dof_handler,
-					dirichelet_conds,
-					boundary_values);
+		// for (auto &bc : boundary_values)
+		// 	bc.second -= solution[bc.first];
 
+		delta_owned = 0.0;
 		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
     }
 }
@@ -335,14 +341,20 @@ void NeoHooke::solve() {
     unsigned int n_iter        = 0;
     double       residual_norm = residual_tolerance + 1;
 
+	// std::map<types::global_dof_index, double> boundary_values;
+	// VectorTools::interpolate_boundary_values(dof_handler, dirichelet_conds, boundary_values);
+	// for (const auto &bc : boundary_values)
+	// 	solution_owned[bc.first] = bc.second;
+	// solution = solution_owned;
+
     while (n_iter < n_max_iters && residual_norm > residual_tolerance)
     {
 		assemble_system();
 		residual_norm = residual_vector.l2_norm();
 
 		pcout << "Newton iteration " << n_iter << "/" << n_max_iters
-		<< " - ||r|| = " << std::scientific << std::setprecision(6)
-		<< residual_norm << std::flush;
+			  << " - ||r|| = " << std::scientific << std::setprecision(6)
+			  << residual_norm << std::flush;
 
 		// We actually solve the system only if the residual is larger than the
 		// tolerance.
@@ -352,6 +364,7 @@ void NeoHooke::solve() {
 		// delta_owned *= 0.2;
 		solution_owned += delta_owned;
 		solution = solution_owned;
+		// solution.update_ghost_values();
 
 		++n_iter;
     }
