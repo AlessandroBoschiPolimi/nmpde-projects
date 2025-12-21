@@ -13,6 +13,7 @@
 
 #include <deal.II/lac/solver_control.h>
 #include <deal.II/lac/solver_gmres.h>
+#include <deal.II/lac/solver_bicgstab.h>
 #include <deal.II/lac/trilinos_precondition.h>
 
 #include <deal.II/base/tensor.h>
@@ -204,11 +205,24 @@ void Guccione::assemble_system() {
                     const double b = param_b[aniso_vect_1 * dim + aniso_vect_2];
                     for (unsigned int i = 0; i< dim; i++) {
                     	for (unsigned int j = 0; j< dim; j++) {
-				B[i][j] += 2 * b * ((E * m) * n) * m[i] * n[j];
-                    		for (unsigned int k = 0; k< dim; k++) {
+				if (i != j)
+				B[i][j] +=  2 * b * ((E * m) * n) * (m[i] * n[j] + m[j] * n[i]);
+				else
+					B[i][j] +=  2 * b * ((E * m) * n) * (m[i] * n[j]);
+				for (unsigned int k = 0; k< dim; k++) {
                     			for (unsigned int l = 0; l< dim; l++) {
-						D[k][l][i][j] += 1.0 / 2.0 * b * (m[i] * n[j] + m[j] * n[i]) * (m[k] * n[l] + m[l] * n[k]);
-						//std::cout << k << l << i << j << ": " << D[k][l][i][j] << std::endl;
+						if ((k != l) && (i != j))
+						D[k][l][i][j] +=  2 * b * (m[i] * n[j] + m[j] * n[i])
+						       		 	 * (m[k] * n[l] + m[l] * n[k]);
+						else if ((k == l) && (i != j))
+							D[k][l][i][j] += 2 * b * (m[i] * n[j] + m[j] * n[i])
+						       		 	 * (m[k] * n[l]);
+						else if ((k != l) && (i == j))
+							D[k][l][i][j] +=  2 * b * (m[i] * n[j])
+						       		 	 * (m[k] * n[l] + m[l] * n[k]);
+						else if ((k == l) && (i == j))
+							D[k][l][i][j] +=  2 * b * (m[i] * n[j])
+						       		 	        * (m[k] * n[l]);
 					}
 				}
 			}
@@ -244,10 +258,9 @@ void Guccione::assemble_system() {
 						for (unsigned int a = 0; a < dim; a++){
 					dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
 						         	F[k][a] * F[i][n] * 
-								(D[a][l][j][n]);
+								(D[a][l][n][j]);
 						}
 					}
-							//	D[j][a][n][l] + D[a][j][n][l]);
 				}
 			}
 		}
@@ -376,7 +389,7 @@ void Guccione::solve() {
 		// We actually solve the system only if the residual is larger than the
 		// tolerance.
 		if (residual_norm <= residual_tolerance) break;
-
+		
 		solve_system();
 		solution_owned += delta_owned;
 		solution = solution_owned;
