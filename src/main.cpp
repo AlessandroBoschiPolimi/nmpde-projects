@@ -65,12 +65,20 @@ int main(int argc, char *argv[])
 
         std::map<types::boundary_id, const Function<dim>*> boundary_functions;
     	Functions::ZeroFunction<dim> zero_function(dim);
+        TestDirichletConditions::SinXYFunction<dim> sin_function;
 
         pcout << "Diritto boundary on ids:";
         for (auto d : w.D_entries)
         {
             pcout << ' ' << d.value;
-            boundary_functions[d.value] = &zero_function;
+            if (d.function == "zero")
+                boundary_functions[d.value] = &zero_function;
+            else if (d.function == "sin")
+                boundary_functions[d.value] = &sin_function;
+            else {
+                pcout << "Unknown Dirichlet boundary condition, skipping work\n";
+                continue;
+            }
         }
 	    pcout << "\n";
         pcout << "UomoNuovo boundary on ids:";

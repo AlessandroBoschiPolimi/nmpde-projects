@@ -24,7 +24,7 @@ struct Work {
 
     struct DEntry {
         int value;
-        // expand with different function on D boundary
+        std::string function;
     };
     std::vector<DEntry> D_entries;
 

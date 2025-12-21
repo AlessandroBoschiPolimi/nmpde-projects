@@ -25,6 +25,8 @@
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/grid/grid_tools.h>
 
+#include <deal.II/fe/mapping_fe.h>
+
 #define GAMBA_DEBUG false
 
 using namespace pde;
@@ -54,8 +56,7 @@ void NeoHooke::setup() {
 			fe = std::make_unique<FESystem<dim>>(FE_Q<dim>(r)^dim);
 
 		pcout << "  Degree                     = " << fe->degree << std::endl;
-		pcout << "  DoFs per cell              = " << fe->dofs_per_cell
-			<< std::endl;
+		pcout << "  DoFs per cell              = " << fe->dofs_per_cell << std::endl;
 
 		// TODO: Check that these quadrature are correct enough
 		quadrature = std::make_unique<QGauss<dim>>(r + 1);
@@ -123,7 +124,10 @@ void NeoHooke::assemble_system() {
     const unsigned int dofs_per_cell = fe->dofs_per_cell;
     const unsigned int n_q           = quadrature->size();
 
+	// MappingFE<dim> mapping(FE_SimplexP<dim>(2));
+
     FEValues<dim> fe_values(
+		// mapping,
 		*fe,
 		*quadrature,
 		update_values | update_gradients |
@@ -131,6 +135,7 @@ void NeoHooke::assemble_system() {
     );
 
     FEFaceValues<dim> fe_values_boundary(
+		// mapping,
 		*fe,
 		*quadrature_boundary,
 		update_values | update_quadrature_points |
@@ -174,10 +179,12 @@ void NeoHooke::assemble_system() {
 			// Compute the displacement tensor I + grad(d(k)) at quadr point q
 			Tensor<2, dim> displacement_tensor({{1,0,0},{0,1,0},{0,0,1}});
 			displacement_tensor += solution_gradient_loc[q];
-			const Tensor<2, dim> inverse_transpose_displacement = transpose(invert(displacement_tensor));
+			const Tensor<2, dim> inverse_displacement = invert(displacement_tensor);
+			const Tensor<2, dim> inverse_transpose_displacement = transpose(inverse_displacement);
 			// Compute determinant of the displacement tensor F
 			// I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
 			const double determinant_displacement = std::abs(determinant(displacement_tensor));
+			// Assert(determinant_displacement > 0, ExcMessage("det(F) <= 0"));
 
 			for (const unsigned int i : fe_values.dof_indices()) {
 				// base to describe v
@@ -185,27 +192,52 @@ void NeoHooke::assemble_system() {
 
 				for (const unsigned j : fe_values.dof_indices()) {
 					// base to describe delta
-					const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
+					const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j, q);
+
+					#if false // chatgpt version
+
+					// trace(F^{-1} dF)
+					double tr_Finv_dF = scalar_product(inverse_displacement, phi_j_grad);
+
+					// term 1: mu * dF
+					double term1 = mu * scalar_product(phi_j_grad, phi_i_grad);
+
+					// term 2: mu * F^{-T} dF^T F^{-T}
+					Tensor<2,dim> A = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
+					double term2 = mu * scalar_product(A, phi_i_grad);
+
+					// term 3: lambda * tr(F^{-1} dF) * F^{-T}
+					double term3 = lambda * tr_Finv_dF * scalar_product(inverse_transpose_displacement, phi_i_grad);
+
+					// term 4: - lambda * log(J) * F^{-T} dF^T F^{-T}
+					double term4 = -lambda * std::log(determinant_displacement) * scalar_product(A, phi_i_grad);
+
+					cell_matrix(i,j) += (term1 + term2 + term3 + term4) * fe_values.JxW(q);
+
+					#else // our version
+
 					const Tensor<2, dim> second_member = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
 
 					// TODO: check correctness of the following multiplication
 					// and if there is an overloaded operator to do it
 					cell_matrix(i,j) += mu * (
 							double_contract<0,0,1,1>(phi_j_grad, phi_i_grad) + 
-							double_contract<0,0,1,1>(second_member , phi_i_grad)
+							double_contract<0,0,1,1>(second_member, phi_i_grad)
 						) * fe_values.JxW(q);
 
 					// Add two additional terms arrising when lambda =/= 0
 					
 					cell_matrix(i,j) += lambda * (
 							double_contract<0,0,1,1>(phi_j_grad, inverse_transpose_displacement) * 
-							double_contract<0,0,1,1>(inverse_transpose_displacement , phi_i_grad)
+							double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
 						) * fe_values.JxW(q);
 
 					// Is the std log relly the best here?
 					cell_matrix(i,j) -= lambda * std::log(determinant_displacement) *
-						double_contract<0,0,1,1>(second_member,phi_i_grad)
+						double_contract<0,0,1,1>(second_member, phi_i_grad)
 						* fe_values.JxW(q);
+
+					#endif
 				}
 
 			cell_rhs(i) -= mu * (
@@ -213,14 +245,13 @@ void NeoHooke::assemble_system() {
 					double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
 				) * fe_values.JxW(q);
 
-			//We also have to add the part with lambda to the right side
+			// We also have to add the part with lambda to the right side
 			cell_rhs(i) -= lambda * std::log(determinant_displacement) * (
 					double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
 				) * fe_values.JxW(q);
 
 			cell_rhs(i) += forcing_term(fe_values.quadrature_point(q)) *
 					fe_values[displacement].value(i, q)[1] * (int)(fe_values.quadrature_point(q)[0] > 0) * fe_values.JxW(q);
-
 			}
 		}
 		

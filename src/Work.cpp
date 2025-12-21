@@ -152,13 +152,13 @@ std::vector<Work> parse_file(const std::string& path) {
 
             std::stringstream ss(line.substr(1));
             int value;
-            std::string zero;
+            std::string function;
 
-            ss >> value >> zero;
-            if (zero != "zero")
-                throw std::runtime_error("Expected 'zero' after D value");
+            ss >> value >> function;
+            if (function.empty())
+                function = "zero";
 
-            sec.D_entries.push_back({value});
+            sec.D_entries.push_back({value, function});
         }
 	
         // if in here already read line

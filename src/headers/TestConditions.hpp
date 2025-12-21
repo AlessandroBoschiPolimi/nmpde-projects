@@ -25,12 +25,32 @@ struct TestNeumannConditions {
 	choose_neumann_function(std::string func_name);
 };
 
+namespace TestDirichletConditions {
+    template <int dim>
+    class SinXYFunction : public Function<dim>
+    {
+    public:
+        SinXYFunction() : Function<dim>(dim) {};
+    
+        virtual double value(const Point<dim> &p, const unsigned int component = 0) const override
+        { 
+            switch (component)
+            {
+            case  2: return 0.2 * (std::sin(p[0]));
+            default: return 0; // zero displacement along x and y axis
+            }
+        }
+    };
+}
+
+
+
 
 namespace TestForcingFunctions {
 
 static const ForcingTermType null_forcing_term = [](const Point<dim> &) { return 0.0; };
 
-//Forcing term, hardcoded, please dont judge me, otherwise I cannot bend it
+// Forcing term, hardcoded, please dont judge me, otherwise I cannot bend it
 // this function f here is f(x,y,z) = (0, 0.02 * x^2, 0) if x > 0
 // 				    = (0,0,0)            otherwise 
 static const ForcingTermType bend_rod = [](const Point<dim> &p) {
