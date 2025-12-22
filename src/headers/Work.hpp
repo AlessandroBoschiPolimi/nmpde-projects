@@ -18,6 +18,9 @@ struct Work {
     std::string output_filename;
     int iterations = 0;
 
+    bool newton_damping = false;
+    double newton_scaling = 0.5;
+
     std::unordered_set<int> N_values;
     std::string N_label;
     std::string N_data;

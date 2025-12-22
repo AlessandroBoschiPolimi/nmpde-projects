@@ -43,7 +43,7 @@ void Guccione::setup() {
 	{
 	    pcout << "Initializing the mesh" << std::endl;
 	
-		mesh_generator->Generate(mesh);
+		config.mesh_generator->Generate(mesh);
 		
 		pcout << "  Number of elements = " << mesh.n_global_active_cells() << std::endl;
 	}
@@ -55,18 +55,23 @@ void Guccione::setup() {
 		// TODO: Check that this Finite Element Space suffices
 		pcout << "Initializing the finite element space" << std::endl;
 
-		if (mesh_generator->ElementType() == Type::Tetrahedra)
-			fe = std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(r)^dim);
+		if (config.mesh_generator->ElementType() == Type::Tetrahedra)
+			fe = std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(config.r)^dim);
 		else
-			fe = std::make_unique<FESystem<dim>>(FE_Q<dim>(r)^dim);
+			fe = std::make_unique<FESystem<dim>>(FE_Q<dim>(config.r)^dim);
 
 		pcout << "  Degree                     = " << fe->degree << std::endl;
 		pcout << "  DoFs per cell              = " << fe->dofs_per_cell
 			<< std::endl;
 
 		// TODO: Check that these quadrature are correct enough
-		quadrature = std::make_unique<QGaussSimplex<dim>>(r + 1);
-		quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
+		if (config.mesh_generator->ElementType() == Type::Tetrahedra) {
+			quadrature = std::make_unique<QGaussSimplex<dim>>(config.r + 1);
+			quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(config.r + 1);
+		} else {
+			quadrature = std::make_unique<QGauss<dim>>(config.r + 1);
+			quadrature_boundary = std::make_unique<QGauss<dim - 1>>(config.r + 1);
+		}
 
 		pcout << "  Quadrature points per cell = " << quadrature->size() << std::endl;
     }
@@ -189,10 +194,10 @@ void Guccione::assemble_system() {
 		for ( const unsigned int q : fe_values.quadrature_point_indices() ) {
             // evaluate anisotropic function
             const std::array<Point<dim>,dim> fns = aniso_fun(fe_values.quadrature_point(q));
-	    //Get a unit matrix, cause we will need it
+	    	//Get a unit matrix, cause we will need it
             Tensor<2,dim> I({{1,0,0},{0,1,0},{0,0,1}});
-	    //Build the deformation gradient
-	    Tensor<2,dim> F = I + solution_gradient_loc[q];
+			//Build the deformation gradient
+			Tensor<2,dim> F = I + solution_gradient_loc[q];
             // build E
             Tensor<2, dim> E = 0.5 * (transpose(F)*(F) - I);
             // build D and B
@@ -205,89 +210,86 @@ void Guccione::assemble_system() {
                     const double b = param_b[aniso_vect_1 * dim + aniso_vect_2];
                     for (unsigned int i = 0; i< dim; i++) {
                     	for (unsigned int j = 0; j< dim; j++) {
-				if (i != j)
-				B[i][j] +=  2 * b * ((E * m) * n) * (m[i] * n[j] + m[j] * n[i]);
-				else
-					B[i][j] +=  2 * b * ((E * m) * n) * (m[i] * n[j]);
-				for (unsigned int k = 0; k< dim; k++) {
-                    			for (unsigned int l = 0; l< dim; l++) {
-						if ((k != l) && (i != j))
-						D[k][l][i][j] +=  2 * b * (m[i] * n[j] + m[j] * n[i])
-						       		 	 * (m[k] * n[l] + m[l] * n[k]);
-						else if ((k == l) && (i != j))
-							D[k][l][i][j] += 2 * b * (m[i] * n[j] + m[j] * n[i])
-						       		 	 * (m[k] * n[l]);
-						else if ((k != l) && (i == j))
-							D[k][l][i][j] +=  2 * b * (m[i] * n[j])
-						       		 	 * (m[k] * n[l] + m[l] * n[k]);
-						else if ((k == l) && (i == j))
-							D[k][l][i][j] +=  2 * b * (m[i] * n[j])
-						       		 	        * (m[k] * n[l]);
-					}
-				}
-			}
+							if (i != j)
+								B[i][j] +=  2 * b * ((E * m) * n) * (m[i] * n[j] + m[j] * n[i]);
+							else
+								B[i][j] +=  2 * b * ((E * m) * n) * (m[i] * n[j]);
+							for (unsigned int k = 0; k< dim; k++) {
+								for (unsigned int l = 0; l< dim; l++) {
+									if ((k != l) && (i != j))
+										D[k][l][i][j] +=  2 * b * (m[i] * n[j] + m[j] * n[i])
+											* (m[k] * n[l] + m[l] * n[k]);
+									else if ((k == l) && (i != j))
+										D[k][l][i][j] += 2 * b * (m[i] * n[j] + m[j] * n[i])
+													* (m[k] * n[l]);
+									else if ((k != l) && (i == j))
+										D[k][l][i][j] +=  2 * b * (m[i] * n[j])
+													* (m[k] * n[l] + m[l] * n[k]);
+									else if ((k == l) && (i == j))
+										D[k][l][i][j] +=  2 * b * (m[i] * n[j])
+													* (m[k] * n[l]);
+								}
+							}
+						}
                     }
                 }
             }
-	    // compute Q
-	    double Q = 0;
+			// compute Q
+			double Q = 0;
             for (unsigned int aniso_vect_1 = 0; aniso_vect_1 < dim; ++aniso_vect_1) {
                 auto m = fns[aniso_vect_1];
                 for (unsigned int aniso_vect_2 = 0; aniso_vect_2 < dim; ++aniso_vect_2) {
                     auto n = fns[aniso_vect_2];
                     const double b = param_b[aniso_vect_1 * dim + aniso_vect_2];
-		    Q += b * std::pow((E * m) * n, 2);
-		}
-	    }
+					Q += b * std::pow((E * m) * n, 2);
+				}
+	    	}
             // build P
             Tensor<2, dim> P;
-	    P = param_c / 2.0 * std::exp(Q) * F * B;
+	    	P = param_c / 2.0 * std::exp(Q) * F * B;
             // compute dP/dF
-	    Tensor<4, dim> dPdF;
-	    for (unsigned int k = 0; k < dim; ++k){
-	    	for (unsigned int l = 0; l < dim; ++l){
-	    		for (unsigned int i = 0; i < dim; ++i){
-	    			for (unsigned int j = 0; j < dim; ++j){
-	    				if (k == i){
-						dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
-							(B[l][j]);
-					}
-	    				dPdF[k][l][i][j] += P[k][l]*
-						            (F * B)[i][j];
-					for (unsigned int n = 0; n < dim; n++){
-						for (unsigned int a = 0; a < dim; a++){
-					dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
-						         	F[k][a] * F[i][n] * 
-								(D[a][l][n][j]);
-						}
-					}
-				}
-			}
-		}
-	    }
-			for ( const unsigned int i : fe_values.dof_indices() ) {
-			// base to describe v
-			const Tensor<2,dim> phi_i_grad = fe_values[displacement].gradient(i, q);
-			for ( const unsigned j : fe_values.dof_indices() ) {
-				// base to describe delta
-				const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
-				//TODO:Check the signs
-				//(dPdF:grad(delta)):grad(v)
-				//TODO: Does this contract the last two indeces? Is the inermediate right?
-				Tensor<2, dim> intermediate;
-				for (unsigned int a = 0; a < dim; a++){
-					for (unsigned int b = 0; b < dim; b++){
-						for (unsigned int c = 0; c < dim; c++){
-							for (unsigned int d = 0; d < dim; d++){
-								intermediate[a][b] += dPdF[a][b][c][d] * phi_j_grad[c][d];
+			Tensor<4, dim> dPdF;
+			for (unsigned int k = 0; k < dim; ++k){
+				for (unsigned int l = 0; l < dim; ++l){
+					for (unsigned int i = 0; i < dim; ++i){
+						for (unsigned int j = 0; j < dim; ++j){
+							if (k == i){
+								dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
+									(B[l][j]);
+							}
+	    					dPdF[k][l][i][j] += P[k][l] * (F * B)[i][j];
+							for (unsigned int n = 0; n < dim; n++){
+								for (unsigned int a = 0; a < dim; a++){
+									dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) * F[k][a] * F[i][n] *  (D[a][l][n][j]);
+								}
 							}
 						}
 					}
 				}
-				cell_matrix(i, j) += double_contract<0,0,1,1>(intermediate, phi_i_grad) * fe_values.JxW(q) ;
 			}
+			for ( const unsigned int i : fe_values.dof_indices() ) {
+				// base to describe v
+				const Tensor<2,dim> phi_i_grad = fe_values[displacement].gradient(i, q);
+				for ( const unsigned j : fe_values.dof_indices() ) {
+					// base to describe delta
+					const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
+					//TODO:Check the signs
+					//(dPdF:grad(delta)):grad(v)
+					//TODO: Does this contract the last two indeces? Is the inermediate right?
+					Tensor<2, dim> intermediate;
+					for (unsigned int a = 0; a < dim; a++){
+						for (unsigned int b = 0; b < dim; b++){
+							for (unsigned int c = 0; c < dim; c++){
+								for (unsigned int d = 0; d < dim; d++){
+									intermediate[a][b] += dPdF[a][b][c][d] * phi_j_grad[c][d];
+								}
+							}
+						}
+					}
+					cell_matrix(i, j) += double_contract<0,0,1,1>(intermediate, phi_i_grad) * fe_values.JxW(q) ;
+				}
 
-			cell_rhs(i) -= double_contract<0,0,1,1>(P, phi_i_grad) * fe_values.JxW(q);
+				cell_rhs(i) -= double_contract<0,0,1,1>(P, phi_i_grad) * fe_values.JxW(q);
 			}
 		}
 		
@@ -300,7 +302,7 @@ void Guccione::assemble_system() {
 
 				if (!cell->face(face_number)->at_boundary())
 					continue;
-				if (!neumann_ids.contains(bound_id))
+				if (!config.neumann_ids.contains(bound_id))
 					continue;
 
 				// If current face lies on the boundary, and its boundary ID (or
@@ -317,7 +319,7 @@ void Guccione::assemble_system() {
 						#endif
 
 						cell_rhs(i) +=
-							neumann_conds(fe_values_boundary.quadrature_point(q)) *
+							config.neumann_conds(fe_values_boundary.quadrature_point(q)) *
 							fe_values_boundary[displacement].value(i, q) *     
 							fe_values_boundary.JxW(q);
 					}
@@ -347,7 +349,7 @@ void Guccione::assemble_system() {
 		std::map<types::global_dof_index, double> boundary_values;
 
 		VectorTools::interpolate_boundary_values(dof_handler,
-					dirichelet_conds,
+					config.dirichelet_conds,
 					boundary_values);
 
 		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
@@ -356,7 +358,7 @@ void Guccione::assemble_system() {
 
 void Guccione::solve_system() {
 
-    SolverControl solver_control(iterations, 1e-6 * residual_vector.l2_norm());
+    SolverControl solver_control(config.iterations, 1e-6 * residual_vector.l2_norm());
 
     SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
     
@@ -405,7 +407,7 @@ void Guccione::output() const {
     pcout << "===============================================" << std::endl;
 
 	{
-		std::filesystem::path p(output_filename);
+		std::filesystem::path p(config.output_filename);
 		std::filesystem::create_directories(p.parent_path());
 	}
 	
@@ -427,14 +429,14 @@ void Guccione::output() const {
 
     data_out.build_patches();
 
-    std::filesystem::path output_path = output_filename;
+    std::filesystem::path output_path = config.output_filename;
 	std::filesystem::path parent_path = output_path.parent_path();
 	parent_path /= ""; // ensures '/' at the end of parent_path
 	std::filesystem::path filename = output_path.filename();
 
     data_out.write_vtu_with_pvtu_record(parent_path.string(), filename.string(), 0, MPI_COMM_WORLD);
 
-    pcout << "Output written to " << output_filename << std::endl;
+    pcout << "Output written to " << config.output_filename << std::endl;
 
     pcout << "===============================================" << std::endl;
 }

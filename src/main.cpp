@@ -45,25 +45,20 @@ int main(int argc, char *argv[])
     {
         pcout << "Starting work:\n";
         std::unique_ptr<MeshGenerator<dim>> mesh_src;
-        if (w.geometry == Work::GeometryType::File)
-        {
+        if (w.geometry == Work::GeometryType::File) {
             pcout << "Using mesh from file: " << w.filename.value() << '\n';
             mesh_src = std::make_unique<MeshLoader<dim>>(w.filename.value());
-        }
-        if (w.geometry == Work::GeometryType::Cube)
-        {
+        } else if (w.geometry == Work::GeometryType::Cube) {
             pcout << "Using cube mesh\n";
             mesh_src = std::make_unique<CubeGenerator<dim>>();
-        }
-        if (w.geometry == Work::GeometryType::Rod)
-        {
+        } else if (w.geometry == Work::GeometryType::Rod) {
             pcout << "Using rod mesh\n";
             mesh_src = std::make_unique<RodGenerator<dim>>();
         }
      
         pcout << "Solver iterations limit " << w.iterations << '\n';
 
-        std::map<types::boundary_id, const Function<dim>*> boundary_functions;
+        std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions;
     	Functions::ZeroFunction<dim> zero_function(dim);
         TestDirichletConditions::SinXYFunction<dim> sin_function;
 
@@ -72,9 +67,9 @@ int main(int argc, char *argv[])
         {
             pcout << ' ' << d.value << ' ' << d.function;
             if (d.function == "zero")
-                boundary_functions[d.value] = &zero_function;
+                dirichlet_conditions[d.value] = &zero_function;
             else if (d.function == "sin")
-                boundary_functions[d.value] = &sin_function;
+                dirichlet_conditions[d.value] = &sin_function;
             else {
                 pcout << "Unknown Dirichlet boundary condition, skipping work\n";
                 continue;
@@ -85,9 +80,11 @@ int main(int argc, char *argv[])
         for (auto d : w.N_values)
             pcout << ' ' << d;
         pcout << "\n";
+        if (w.newton_damping)
+            pcout << "Newton scaling " << w.newton_scaling << '\n';
 
 
-        std::function<Point<dim>(const Point<dim> &)> h;
+        std::function<Point<dim>(const Point<dim> &)> neumann_condition;
 
         try {
             if (w.N_data == "") {
@@ -97,13 +94,21 @@ int main(int argc, char *argv[])
             } else {
                 TestNeumannConditions::initialize(std::stod(w.N_data));
             }
-            h = TestNeumannConditions::choose_neumann_function(w.N_label);
+            neumann_condition = TestNeumannConditions::choose_neumann_function(w.N_label);
         } catch(std::invalid_argument &ia) {
             pcout << "Invalid Argument: " << ia.what() << std::endl;
         } catch(std::runtime_error &e) { 
             pcout << e.what() << " skipping work" << std::endl;
             continue;
-        } 
+        }
+
+        MechanicalDisplacement::Config config{
+                w.iterations, w.output_filename, 
+                std::move(mesh_src), r,
+                w.newton_damping, w.newton_scaling,
+                neumann_condition, w.N_values,
+                dirichlet_conditions, select_forcing_term(argv[2])
+            };
 
         // TODO: fix/add forcing term to work
         if (w.material == Work::MaterialType::NeoHooke)
@@ -113,14 +118,7 @@ int main(int argc, char *argv[])
             Work::NeoHookeData params = std::get<Work::NeoHookeData>(w.problem_params);
             pcout << "C = " << params.C << ", lambda = " << params.lambda << '\n';
 
-            NeoHooke problem = NeoHooke(
-                std::move(mesh_src), r, 
-                boundary_functions, h, 
-                w.N_values, select_forcing_term(argv[2]),
-                w.output_filename, w.iterations,
-                pcout, mpi_rank,
-                params.C, params.lambda
-            );
+            NeoHooke problem = NeoHooke(std::move(config), pcout, mpi_rank, params.C, params.lambda);
             problem.setup();
             problem.solve();
             problem.output();
@@ -144,15 +142,7 @@ int main(int argc, char *argv[])
                     );
                 };
 
-            Guccione problem = Guccione(
-                std::move(mesh_src), r,
-                boundary_functions, h,
-                w.N_values, select_forcing_term(argv[2]),
-                w.output_filename, w.iterations,
-                pcout, mpi_rank,
-                params.c, params.b,
-                aniso_fun, params.alpha
-            );
+            Guccione problem = Guccione(std::move(config), pcout, mpi_rank, params.c, params.b, aniso_fun, params.alpha);
             problem.setup();
             problem.solve();
             problem.output();

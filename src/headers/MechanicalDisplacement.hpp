@@ -30,19 +30,6 @@ class MechanicalDisplacement
 {
 
 protected:
-    const std::unique_ptr<MeshGenerator<dim>> mesh_generator;
-    const unsigned int r;
-
-    // ---------- NEUMANN CONDITIONS ----------
-    const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
-    const std::unordered_set<int> neumann_ids;
-    
-    // ---------- DIRICHELET CONDITIONS -----------
-    const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
-    
-    // --------- FORCING TERM -------------
-    const ForcingTermType forcing_term;
-
     parallel::fullydistributed::Triangulation<dim> mesh;
 
     // Finite Element System (USE FE_Q)
@@ -84,38 +71,70 @@ protected:
     const unsigned int mpi_rank;
     const ConditionalOStream pcout;
 
-    const std::string output_filename;
-    const int iterations = 10000;
 
     virtual void assemble_system() = 0;
     virtual void solve_system() = 0;
 
 public:
+    struct Config
+    {
+        const int iterations = 10000;
+        const std::string output_filename;
+
+        std::unique_ptr<MeshGenerator<dim>> mesh_generator;
+        const unsigned int r;
+
+        const bool newton_damping = false;
+        const double newton_scaling = 0.2;
+
+        // ---------- NEUMANN CONDITIONS ----------
+        const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
+        const std::unordered_set<int> neumann_ids;
+        
+        // ---------- DIRICHELET CONDITIONS -----------
+        const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
+        
+        // --------- FORCING TERM -------------
+        const ForcingTermType forcing_term;
+
+        Config(const int iterations_, const std::string& output_filename_, 
+                std::unique_ptr<MeshGenerator<dim>>&& mesh_generator_, const unsigned int r_,
+                const bool newton_damping_, const double newton_scaling_,
+                const std::function<Point<dim>(const Point<dim> &)>& neumann_conds_,
+                const std::unordered_set<int>& neumann_ids_, 
+                const std::map<types::boundary_id, const Function<dim> *>& dirichelet_conds_,
+                const ForcingTermType& forcing_term_) :
+            iterations(iterations_), output_filename(output_filename_),
+            mesh_generator(std::move(mesh_generator_)), r(r_),
+            newton_damping(newton_damping_), newton_scaling(newton_scaling_),
+            neumann_conds(neumann_conds_), neumann_ids(neumann_ids_),
+            dirichelet_conds(dirichelet_conds_), forcing_term(forcing_term_)
+        {}
+
+        Config(Config&& other) :
+            iterations(other.iterations), output_filename(other.output_filename),
+            mesh_generator(std::move(other.mesh_generator)), r(other.r),
+            newton_damping(other.newton_damping), newton_scaling(other.newton_scaling),
+            neumann_conds(other.neumann_conds), neumann_ids(other.neumann_ids),
+            dirichelet_conds(other.dirichelet_conds), forcing_term(other.forcing_term)
+        {}
+    };
+
+protected:
+    Config config;
+
+public:
 
     MechanicalDisplacement(
-            std::unique_ptr<MeshGenerator<dim>> mesh_generator_,
-            const unsigned int &r_,
-            const std::map<types::boundary_id, const Function<dim> *> boundary_functions_,
-            const std::function<Point<dim>(const Point<dim> &)> &neum_funcs_,
-            const std::unordered_set<int>& neumann_ids_,
-	        const ForcingTermType &forcing_term_,
-            const std::string& output_filename_,
-            const int iterations_,
+            Config&& config_,
 	        const ConditionalOStream pcout_,
 	        const unsigned int mpi_rank_
     ) :
-        mesh_generator(std::move(mesh_generator_)),
-        r(r_),
-        neumann_conds(neum_funcs_),
-        neumann_ids(neumann_ids_),
-        dirichelet_conds(boundary_functions_),
-    	forcing_term(forcing_term_),
 	    mesh(MPI_COMM_WORLD),
         mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
 	    mpi_rank(mpi_rank_),
 	    pcout(pcout_),
-        output_filename(output_filename_),
-        iterations(iterations_)
+        config(std::move(config_))
     {}
     
     virtual void setup() = 0;

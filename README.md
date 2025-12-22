@@ -62,7 +62,8 @@ The work file contains the execution parameters, which have to be provided in th
 	<NeoHooke | Guccione>                         // material type
 	<file <filename> | cube | rod>                // mesh and optional input filename
 	out <filename>                                // output filename
-	it <integer>                                  // linear solver max iterations   
+	it <integer>                                  // linear solver max iterations
+	[scaling <double>]                            // newton damping
 	N <csv, of, integers>                         // ids of Neumann boundaries
 	<Neumann function> [parameters]               // see later
 	D <boundary_id> <Dirichlet function>          // ids of Dirichlet boundaries, see later

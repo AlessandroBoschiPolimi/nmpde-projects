@@ -116,8 +116,26 @@ std::vector<Work> parse_file(const std::string& path) {
             else throw std::runtime_error("Provide iteration count as fourth line");
         }
 
-        /* N line */
+        /* scaling line */
+        bool no_read = false;
         line = next_line();
+        {
+            std::stringstream ss(line);
+            std::string word;
+            ss >> word;
+
+            if (word == "scaling")
+            {
+                sec.newton_damping = true;
+                ss >> sec.newton_scaling;
+            }
+            else
+                no_read = true;
+        }
+
+        /* N line */
+        if (!no_read)
+            line = next_line();
         if (line.empty() || line[0] != 'N')
             throw std::runtime_error("Expected N line");
 
