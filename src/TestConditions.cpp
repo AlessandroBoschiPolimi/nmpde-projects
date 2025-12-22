@@ -73,7 +73,7 @@ constexpr auto bowl_pull_out = [](const Point<dim> &p) {
 
 constexpr auto rod_pull = [](const Point<dim> &p) {
     const double tau = TestNeumannConditions::parameter;
-    return Point<dim>(0, 0, tau * (int)(p[2] < -0.2));
+    return Point<dim>(0, 0, tau);
 };
 
 

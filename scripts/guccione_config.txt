@@ -1,14 +1,13 @@
 -----
 Guccione
-cube
+rod
 out ../out/guccione
 it 10000
-N 1
-rod_pull 0.5
-D 2 zero
-D 3 zero
-c 1
-b 1 1 1 1 1 1 1 1 1
-a 0.4
+N 4
+rod_pull 0.004
+D 0 zero
+c 2
+b 8 4 4 4 2 2 4 2 2
+alpha 0.9
 anfun 1,0,0 0,1,0 0,0,1
 

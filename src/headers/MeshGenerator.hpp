@@ -113,7 +113,7 @@ public:
     {
         // Create the mesh using dealii generator
 		Triangulation<dim> mesh_serial;
-		GridGenerator::subdivided_cylinder(mesh_serial, 60, 0.5, 5.0);
+		GridGenerator::subdivided_hyper_rectangle(mesh_serial, std::vector<unsigned int>{20, 3, 3}, Point<dim>(0, 0, 0), Point<dim>(10, 1, 1), true);
 
 		// Then, we copy the triangulation into the parallel one.
 		{
@@ -125,5 +125,5 @@ public:
 
     Type ElementType() const override { return Type::Hexahedra; }
 
-    static constexpr int hull_id = 0, left_id = 1, right_id = 2;
+    //static constexpr int hull_id = 0, left_id = 1, right_id = 2;
 };
