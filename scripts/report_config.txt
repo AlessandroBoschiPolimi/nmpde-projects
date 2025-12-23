@@ -1,3 +1,17 @@
+# scenario described in "problem 2" from source 5 
+-----
+Guccione
+file ../mesh/mesh_ref.msh
+out ../out/report/gc_acorn_ref
+it 10000
+new_damn 0.3
+N 3
+bowl_ref 10000
+D 2 zero
+c 10000
+b 1 1 1 1 1 1 1 1 1
+anfun 1,0,0 0,1,0 0,0,1
+
 # Pulling from one side and two adj blocked
 -----
 NeoHooke
@@ -53,12 +67,12 @@ Guccione
 rod
 out ../out/report/gc_rod_reference
 it 10000
+new_damn 0.9
 N 4
 rod_pull 0.004
 D 0 zero
 c 2
 b 8 4 4 4 2 2 4 2 2
-alpha 0.9
 anfun 1,0,0 0,1,0 0,0,1
 
 
@@ -68,12 +82,12 @@ Guccione
 cube
 out ../out/report/gc_cube_push_alot
 it 10000
+new_damn 0.9
 N 4
 cube_push 0.5
 D 5 zero
 c 2
 b 8 4 4 4 2 2 4 2 2
-alpha 0.9
 anfun 1,0,0 0,1,0 0,0,1
 
 # push the cube along the !z axis, compresses it less
@@ -82,12 +96,12 @@ Guccione
 cube
 out ../out/report/gc_cube_push_alittle
 it 10000
+new_damn 0.9
 N 0
 cube_push 0.5
 D 1 zero
 c 2
 b 8 4 4 4 2 2 4 2 2
-alpha 0.9
 anfun 1,0,0 0,1,0 0,0,1
 
 # press on the acorn from the inside

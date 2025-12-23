@@ -8,7 +8,7 @@ NeoHooke
 cube
 out ../out/neo/cube/n_push_4_d_zero_5_c1_l2_sin
 it 20000
-scaling 0.2
+new_damn 0.2
 N 4
 cube_push
 D 5 sin

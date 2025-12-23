@@ -62,11 +62,23 @@ const auto cube_push = [&tau = TestNeumannConditions::parameter](const Point<dim
 
 // Applies a force with modulus 'tau' in the normal direction w.r.t. surface
 // of an ellipsoid with semi-axes with the ratio 1:1:3. OUTGOING
+// This is the outer surface of our acorn
 constexpr auto bowl_pull_out = [](const Point<dim> &p) {
 	const double tau = TestNeumannConditions::parameter;
 	double xx = p[0] * p[0], yy = p[1] * p[1], zz = p[2] * p[2];
 	return tau / std::sqrt(xx + yy + zz / 81.0) *
 		Point<dim>(p[0], p[1], p[2] / 9.0); // vector normal to the outer surface of the acorn;
+};
+
+// Applies a force with modulus 'tau' in the normal direction w.r.t. surface
+// of an ellipsoid with semi-axes with the ratio 7:7:17. OUTGOING
+// This is the force used in paper 5 problem 2, inside the acorn.
+constexpr auto bowl_push_in = [](const Point<dim> &p) {
+	const double tau = TestNeumannConditions::parameter;
+	double xx = p[0] * p[0], yy = p[1] * p[1], zz = p[2] * p[2];
+    constexpr double a2 = 7.0 * 7.0, c2 = 17.0 * 17.0;
+    constexpr double a4 = a2 * a2, c4 = c2 * c2;
+	return tau / std::sqrt(xx / a4 + yy / a4 + zz / c4) * Point<dim>(p[0] / a2, p[1] / a2, p[2] / c2);
 };
 
 /// -------------  ROD SECTION ----------------
@@ -86,8 +98,10 @@ const std::function<Point<dim> (const Point<dim> &)>
 {
     // Here I simply started defining different functions
     // The more models and boundary conditions we apply the better it is.
-    if (choice.starts_with("bowl"))
+    if (choice == "bowl")
     	return functions::bowl_pull_out;
+    if (choice == "bowl_ref")
+    	return functions::bowl_push_in;
     if (choice == "cube_pull")
 	    return functions::cube_pull;
     if (choice == "rod_pull")

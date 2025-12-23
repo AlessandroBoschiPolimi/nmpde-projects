@@ -8,7 +8,7 @@ namespace pde {
 
 class Guccione : public MechanicalDisplacement {
 protected:
-    const double param_c, param_alpha;
+    const double param_c;
     const std::array<double, 9> param_b;
     // Returns the f, n, s vectors
     const std::function<std::array<Point<dim>, dim>(const Point<dim> &)> &aniso_fun; 
@@ -24,14 +24,12 @@ public:
 	    const unsigned int mpi_rank_,
 	    const double param_c_,
         const std::array<double, 9> param_b_,
-        const AnisotropicFunctionType &aniso_fun_,
-        const double param_alpha_
+        const AnisotropicFunctionType &aniso_fun_
     ) :
         MechanicalDisplacement(std::move(config_), pcout_, mpi_rank_),
         param_c(param_c_),
         param_b(param_b_),
-        aniso_fun(aniso_fun_),
-        param_alpha(param_alpha_)
+        aniso_fun(aniso_fun_)
     {}
 
     void setup() override;

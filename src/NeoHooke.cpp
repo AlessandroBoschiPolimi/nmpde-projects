@@ -146,8 +146,7 @@ void NeoHooke::assemble_system() {
 		// mapping,
 		*fe,
 		*quadrature_boundary,
-		update_values | update_quadrature_points |
-		update_JxW_values
+		update_values | update_quadrature_points | update_JxW_values
     );
 
 
@@ -191,7 +190,7 @@ void NeoHooke::assemble_system() {
 			const Tensor<2, dim> inverse_transpose_displacement = transpose(inverse_displacement);
 			// Compute determinant of the displacement tensor F
 			// I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
-			const double determinant_displacement = std::abs(determinant(displacement_tensor));
+			const double determinant_displacement = determinant(displacement_tensor);
 			Assert(determinant_displacement > 0, ExcMessage("det(F) <= 0"));
 
 			for (const unsigned int i : fe_values.dof_indices()) {
@@ -202,7 +201,7 @@ void NeoHooke::assemble_system() {
 					// base to describe delta
 					const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j, q);
 
-					#if false // chatgpt version
+					#if true // chatgpt version
 
 					// trace(F^{-1} dF)
 					double tr_Finv_dF = scalar_product(inverse_displacement, phi_j_grad);
@@ -279,9 +278,9 @@ void NeoHooke::assemble_system() {
 						#if GAMBA_DEBUG
 							pcout << "Point(q) " << fe_values_boundary.quadrature_point(q)  << std::endl;
 							pcout << "Neumann Conditions: " <<
-							config.neumann_conds(fe_values_boundary.quadrature_point(q)) << std::endl;
+								config.neumann_conds(fe_values_boundary.quadrature_point(q)) << std::endl;
 							pcout << "fe_values_boundary[displacement].value(i, q) " << 
-							fe_values_boundary[displacement].value(i, q) << std::endl;
+								fe_values_boundary[displacement].value(i, q) << std::endl;
 						#endif
 
 						cell_rhs(i) +=
@@ -306,8 +305,7 @@ void NeoHooke::assemble_system() {
     jacobian_matrix.compress(VectorOperation::add);
     residual_vector.compress(VectorOperation::add);
 
-	if (true)
-	{
+	#if true
 		std::map<types::global_dof_index, double> boundary_values;
 		VectorTools::interpolate_boundary_values(dof_handler, config.dirichelet_conds, boundary_values);
 
@@ -316,7 +314,7 @@ void NeoHooke::assemble_system() {
 
 		delta_owned = 0.0;
 		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
-    }
+	#endif
 }
 
 void NeoHooke::solve_system() {

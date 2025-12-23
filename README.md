@@ -63,7 +63,7 @@ The work file contains the execution parameters, which have to be provided in th
 	<file <filename> | cube [int] | rod>          // mesh and parameters, see later
 	out <filename>                                // output filename
 	it <integer>                                  // linear solver max iterations
-	[scaling <double>]                            // newton damping
+	[new_damn <double>]                           // newton damping
 	N <csv, of, integers>                         // ids of Neumann boundaries
 	<Neumann function> [parameters]               // see later
 	D <boundary_id> <Dirichlet function>          // ids of Dirichlet boundaries, see later
@@ -95,7 +95,6 @@ The `material parameters` for NeoHooke are
 The `material parameters` for Guccione are
 - `c <double>`: todo: meaning
 - `b <9 space separated integers>`: 
-- `a <double>`: 
 - `anfun <int>,<int>,<int> <int>,<int>,<int> <int>,<int>,<int>`: 
 
 There is very little validation on the input, pls be gentle.
@@ -125,5 +124,4 @@ Below two examples
 	D 0 zero
 	c 2
 	b 8 4 4 4 2 2 4 2 2
-	alpha 0.9
 	anfun 1,0,0 0,1,0 0,0,1

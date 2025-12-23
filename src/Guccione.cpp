@@ -399,7 +399,9 @@ void Guccione::solve() {
 		if (residual_norm <= residual_tolerance) break;
 		
 		solve_system();
-		delta_owned *= param_alpha;
+
+		if (config.newton_damping)
+			delta_owned *= config.newton_scaling;
 		solution_owned += delta_owned;
 		solution = solution_owned;
 

@@ -22,7 +22,7 @@ struct Work {
     int iterations = 0;
 
     bool newton_damping = false;
-    double newton_scaling = 0.5;
+    double newton_scaling = 1.0;
 
     std::unordered_set<int> N_values;
     std::string N_label;
@@ -40,7 +40,7 @@ struct Work {
     };
     struct GuccioneData
     {
-        double c, alpha;
+        double c;
         std::array<double, 9> b;
         std::array<Point<dim>, dim> aniso_fun_points;
     };

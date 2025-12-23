@@ -137,8 +137,7 @@ std::vector<Work> parse_file(const std::string& path) {
             std::string word;
             ss >> word;
 
-            if (word == "scaling")
-            {
+            if (word == "new_damn") {
                 sec.newton_damping = true;
                 ss >> sec.newton_scaling;
             }
@@ -242,15 +241,6 @@ std::vector<Work> parse_file(const std::string& path) {
                 for (int i = 1; i < 10; i++) {
                     data.b[i-1] = std::stod(toks[i]);
                 }
-            }
-
-            line = next_line();
-            /* alpha param */
-            {
-                if (line.empty() || line[0] != 'a')
-                    throw std::runtime_error("Expected alpha line");
-                toks = split(line, " ");
-                data.alpha = std::stod(toks[1]);
             }
 
             line = next_line();

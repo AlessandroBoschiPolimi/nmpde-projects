@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
             pcout << "Guccione Problem\n";
             
             Work::GuccioneData params = std::get<Work::GuccioneData>(w.problem_params);
-            pcout << "c = " << params.c << ", alpha " << params.alpha << '\n';
+            pcout << "c = " << params.c << '\n';
             pcout << "b = ";
             for (int i = 0; i < params.b.size() - 1; i++)
                 pcout << params.b[i] << ", ";
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
                     );
                 };
 
-            Guccione problem = Guccione(std::move(config), pcout, mpi_rank, params.c, params.b, aniso_fun, params.alpha);
+            Guccione problem = Guccione(std::move(config), pcout, mpi_rank, params.c, params.b, aniso_fun);
             problem.setup();
             problem.solve();
             problem.output();
