@@ -47,8 +47,8 @@ std::vector<Work> parse_file(const std::string& path) {
     std::vector<Work> sections;
     std::string line;
 
-    auto next_line = [&]() -> std::string {
-        if (!std::getline(in, line))
+    auto next_line = [&](bool flag = true) -> std::string {
+        if (!std::getline(in, line) && flag)
             throw std::runtime_error("Unexpected end of file");
         return trim(line);
     };
@@ -58,11 +58,17 @@ std::vector<Work> parse_file(const std::string& path) {
         if (line.empty())
             continue;
 
-	if(line[0] == '#') continue;
+        if (line[0] == '#')
+            continue;
 
-        if (line != "-----")
-            throw std::runtime_error("Expected section separator '-----'");
-	
+        bool skip = false;
+        if (line != "-----") {
+            if (line == "----")
+                skip = true; // easier then actually skipping the lines
+            else
+                throw std::runtime_error("Expected section separator '-----'");
+        }
+        
         Work sec;
 
         /* Material */
@@ -80,11 +86,18 @@ std::vector<Work> parse_file(const std::string& path) {
 
             if (type == "file") {
                 sec.geometry = Work::GeometryType::File;
-                ss >> sec.filename.emplace();
-                if (!sec.filename || sec.filename->empty())
+                std::string filename;
+                ss >> filename;
+                if (filename.empty())
                     throw std::runtime_error("Missing filename after 'file'");
+                sec.mesh_param = filename;
             }
-            else if (type == "cube") sec.geometry = Work::GeometryType::Cube;
+            else if (type == "cube") {
+                sec.geometry = Work::GeometryType::Cube;
+                unsigned int refinement = 1;
+                ss >> refinement; // if there is no int at this point in the string: refinement is not modified
+                sec.mesh_param = refinement;
+            } 
             else if (type == "rod")  sec.geometry = Work::GeometryType::Rod;
             else throw std::runtime_error("Unknown geometry: " + type);
         }
@@ -263,19 +276,9 @@ std::vector<Work> parse_file(const std::string& path) {
 
             sec.problem_params = data;
         }
-        //
-        // while (true) {
-        //     std::streampos pos = in.tellg();
-        //     if (!std::getline(in, line))
-        //         break;
-        //
-        //     if (line == "-----") {
-        //         in.seekg(pos);
-        //         break;
-        //     }
-        // }
 
-    	sections.push_back(std::move(sec));
+        if (!skip)
+        	sections.push_back(std::move(sec));
     }
 
     return sections;

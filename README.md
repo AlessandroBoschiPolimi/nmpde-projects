@@ -60,7 +60,7 @@ The work file contains the execution parameters, which have to be provided in th
 
 	-----
 	<NeoHooke | Guccione>                         // material type
-	<file <filename> | cube | rod>                // mesh and optional input filename
+	<file <filename> | cube [int] | rod>          // mesh and parameters, see later
 	out <filename>                                // output filename
 	it <integer>                                  // linear solver max iterations
 	[scaling <double>]                            // newton damping
@@ -73,6 +73,11 @@ The work file contains the execution parameters, which have to be provided in th
 Note: comments are now supported by our parser, but it ignores only lines starting with '#'.
 
 It's possible to submit multiple jobs in the same execution, each must start with a line with exactly 5 '-'.
+If the job starts with 4 '-' it is skipped, any other amount crashes the execution.
+
+The optional parameters for the meshes are
+- `file`: mandatory `filename`
+- `cube`: optional `int`, representing the refinement of the mesh; the default is 1, corresponding to 6 subdivisions along each dimension; the parameter multiplies the subdivisions per dimension, so don't go past 3 if you want to see the results within a lifetime.
 
 The possible values for `Neumann function` are
 - `bowl_pull_out` representing a force pulling in the direction normal to surface of an ellipsoid, and as parameters expects a double representing the scaling of the force.
@@ -95,30 +100,30 @@ The `material parameters` for Guccione are
 
 There is very little validation on the input, pls be gentle.
 
-Below an example using NeoHooke law, on the mesh provided in file ../mesh/mesh.msh
+Below two examples
 
-	------
+	# pressing a NeoHookean cube on one side, keeping the opposite fixed, 2 * default mesh refinement
+	-----
 	NeoHooke
-	file ../mesh/mesh.msh
-	out ../out/acorn
-	it 10000
-	N 1
-	bowl_pull_out -0.5
-	D 2 zero
-	D 3 zero
+	cube 2
+	out ../out/example1
+	it 2000
+	N 4
+	cube_push 0.4
+	D 5 zero
 	C 1
 	l 2
 
+	# example for Guccione
 	-----
 	Guccione
-	cube
-	out ../out/guccione
+	rod
+	out ../out/example2
 	it 10000
-	N 1
-	cube_pull 0.5
-	D 2 zero
-	D 3 zero
-	c 1
-	b 1 2 3 4 5 6 7 8 9
-	a 0.4
+	N 4
+	rod_pull 0.004
+	D 0 zero
+	c 2
+	b 8 4 4 4 2 2 4 2 2
+	alpha 0.9
 	anfun 1,0,0 0,1,0 0,0,1

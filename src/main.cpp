@@ -4,12 +4,16 @@
 #include "headers/Work.hpp"
 
 #include <filesystem>
+#include <chrono>
+using namespace std::chrono_literals;
+namespace stdc = std::chrono;
 
 const pde::ForcingTermType select_forcing_term(std::string boolean_value) {
     using namespace pde::TestForcingFunctions;
     return std::stoi(boolean_value) ? bend_rod : null_forcing_term;
 }
 
+void print_time(const stdc::nanoseconds& time, const ConditionalOStream& out);
 
 int main(int argc, char *argv[])
 {
@@ -43,14 +47,16 @@ int main(int argc, char *argv[])
     pcout << "Work size " << work.size() << '\n';
     for (auto& w : work)
     {
+        auto start = stdc::high_resolution_clock::now();
+
         pcout << "Starting work:\n";
         std::unique_ptr<MeshGenerator<dim>> mesh_src;
         if (w.geometry == Work::GeometryType::File) {
-            pcout << "Using mesh from file: " << w.filename.value() << '\n';
-            mesh_src = std::make_unique<MeshLoader<dim>>(w.filename.value());
+            pcout << "Using mesh from file: " << std::get<std::string>(w.mesh_param.value()) << '\n';
+            mesh_src = std::make_unique<MeshLoader<dim>>(std::get<std::string>(w.mesh_param.value()));
         } else if (w.geometry == Work::GeometryType::Cube) {
-            pcout << "Using cube mesh\n";
-            mesh_src = std::make_unique<CubeGenerator<dim>>();
+            pcout << "Using cube mesh, refinement " << std::get<unsigned int>(w.mesh_param.value()) << '\n';
+            mesh_src = std::make_unique<CubeGenerator<dim>>(std::get<unsigned int>(w.mesh_param.value()));
         } else if (w.geometry == Work::GeometryType::Rod) {
             pcout << "Using rod mesh\n";
             mesh_src = std::make_unique<RodGenerator<dim>>();
@@ -122,8 +128,6 @@ int main(int argc, char *argv[])
             problem.setup();
             problem.solve();
             problem.output();
-
-            pcout << "\n\n\n\n";
         }
         else
         {
@@ -146,10 +150,43 @@ int main(int argc, char *argv[])
             problem.setup();
             problem.solve();
             problem.output();
-
-            pcout << "\n\n\n\n";
         }
+
+        auto end = stdc::high_resolution_clock::now();
+        auto dt = end - start;
+        pcout << "Execution time: ";
+        print_time(dt, pcout);
+
+        pcout << "\n\n\n\n";
+
     }
 
     return 0;
+}
+
+
+void print_time(const stdc::nanoseconds& time, const ConditionalOStream& out)
+{
+    double value = static_cast<double>(time.count());
+    const char* unit = "ns";
+
+    if (value >= 1'000'000'000.0) {
+        value /= 1'000'000'000.0;
+        unit = "s";
+    }
+    else if (value >= 1'000'000.0) {
+        value /= 1'000'000.0;
+        unit = "ms";
+    }
+    else if (value >= 1'000.0) {
+        value /= 1'000.0;
+        unit = "us";
+    }
+
+    std::ios oldState(nullptr);
+    oldState.copyfmt(out.get_stream());
+
+    out << std::fixed << std::setprecision(2) << value << unit;
+
+    out.get_stream().copyfmt(oldState);
 }

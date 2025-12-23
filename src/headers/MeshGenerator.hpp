@@ -65,6 +65,9 @@ template <int dim>
 class CubeGenerator : public MeshGenerator<dim>
 {
 public:
+    const unsigned int precision = false;
+
+    CubeGenerator(unsigned int precision_ = 1) : precision(std::max(precision_, (unsigned int)1)) {}
     ~CubeGenerator() override = default;
 
     void Generate(parallel::fullydistributed::Triangulation<dim>& mesh) const override 
@@ -89,7 +92,7 @@ public:
 		* 
 		*/
 		Triangulation<dim> mesh_serial;
-		GridGenerator::subdivided_hyper_cube(mesh_serial, 6, 0.0, 1.0, true);
+		GridGenerator::subdivided_hyper_cube(mesh_serial, precision * 6, 0.0, 1.0, true);
         
 		// Then, we copy the triangulation into the parallel one.
 		{

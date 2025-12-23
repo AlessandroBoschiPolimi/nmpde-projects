@@ -5,6 +5,7 @@
 
 build/*
 out/*
+res/*
 mesh/*
 scripts/personal_config_*.txt
 *.vtu
