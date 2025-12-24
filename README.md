@@ -1,8 +1,8 @@
-# TITLE
+# Heart Mechanics Simplified Simulation
 
 ## Build Commands
 
-**Linux**
+### **Linux**
 
 To use dealii included in the AMSC constainer use
 
@@ -25,7 +25,7 @@ Then build using
 
 The resulting executable is build/PDE-06
 
-**Windows**
+### **Windows**
 
 ChatGPT keeps gaslighting me by saying that is possible to compile dealii on windows, upon further queries it turns out that all the methods he provided are no longer valid (or have never been). For this reason the following instruction don't make any sense, but nevertheless i still believe in a day (within the deadline of this project) when i'll be able to use an actual IDE, so i won't erase this.
 
@@ -55,6 +55,8 @@ It requires gmsh installed
 
 To run the command run:
 `./PDE-06 <work_file> <forcing_term: 0|1>`
+
+### Configuration File
 
 The work file contains the execution parameters, which have to be provided in the following format.
 
