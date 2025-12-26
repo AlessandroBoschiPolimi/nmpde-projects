@@ -6,7 +6,8 @@
 
 To use dealii included in the AMSC constainer use
 
-	cmake -S . -B build
+	cmake -S . --preset linux-debug
+	cmake -S . --preset linux-release
 
 otherwise, either
 - export the following environment variable with the path to your dealii installation
@@ -15,15 +16,17 @@ otherwise, either
 
 - specify it just for the cmake command
 
-		cmake -S . -B build -DDEAL_II_DIR=/path/to/dealii
+		cmake -S . --preset <preset> -DDEAL_II_DIR=/path/to/dealii
 
 
 Then build using
 
-	cd build
-	make
+	cd build/<debug | release>
+	make -j
 
-The resulting executable is build/PDE-06
+The resulting executable is build/<debug | release>/PDE-06, to run it
+
+	mpirun --use-hwthread-cpus ./PDE-06 <work_filename> <forcing_term: 0 | 1>
 
 ### **Windows**
 

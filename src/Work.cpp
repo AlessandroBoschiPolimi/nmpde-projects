@@ -38,11 +38,11 @@ std::vector<std::string> split(std::string s, const std::string& delimiter) {
     return tokens;
 }
 
-std::vector<Work> parse_file(const std::string& path) {
+std::vector<Work> parse_file(const std::filesystem::path& path) {
     std::ifstream in(path);
 
     if (!in)
-        throw std::runtime_error("Cannot open file: " + path);
+        throw std::runtime_error("Cannot open file: " + path.string());
 
     std::vector<Work> sections;
     std::string line;

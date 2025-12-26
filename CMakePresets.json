@@ -6,7 +6,7 @@
 			"name": "windows-debug",
 			"displayName": "Windows Debug",
 			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/out/build/windows-debug",
+			"binaryDir": "${sourceDir}/build/debug",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Debug",
 				"CMAKE_C_COMPILER": "cl",
@@ -22,7 +22,7 @@
 			"name": "windows-release",
 			"displayName": "Windows Release",
 			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/out/build/windows-release",
+			"binaryDir": "${sourceDir}/build/release",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Release",
 				"CMAKE_C_COMPILER": "cl",
@@ -38,7 +38,7 @@
 			"name": "linux-debug",
 			"displayName": "Linux Debug",
 			"generator": "Unix Makefiles",
-			"binaryDir": "${sourceDir}/out/build/linux-debug",
+			"binaryDir": "${sourceDir}/build/debug",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Debug"
 			},
@@ -52,7 +52,7 @@
 			"name": "linux-release",
 			"displayName": "Linux Release",
 			"generator": "Unix Makefiles",
-			"binaryDir": "${sourceDir}/out/build/linux-release",
+			"binaryDir": "${sourceDir}/build/release",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Release"
 			},

@@ -191,7 +191,8 @@ void NeoHooke::assemble_system() {
 			// Compute determinant of the displacement tensor F
 			// I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
 			const double determinant_displacement = determinant(displacement_tensor);
-			Assert(determinant_displacement > 0, ExcMessage("det(F) <= 0"));
+			if (determinant_displacement <= 0)
+  				throw std::runtime_error("det(F) <= 0");
 
 			for (const unsigned int i : fe_values.dof_indices()) {
 				// base to describe v
@@ -398,13 +399,14 @@ void NeoHooke::solve() {
 		solution.update_ghost_values();
 
 		++n_iter;
+		// output(n_iter);
     }
 
     pcout << " < tolerance" << std::endl;
     pcout << "===============================================" << std::endl;
 }
 
-void NeoHooke::output() const {
+void NeoHooke::output(int ts) const {
     pcout << "===============================================" << std::endl;
 
 	{
@@ -435,7 +437,7 @@ void NeoHooke::output() const {
 	parent_path /= ""; // ensures '/' at the end of parent_path
 	std::filesystem::path filename = output_path.filename();
 
-    data_out.write_vtu_with_pvtu_record(parent_path.string(), filename.string(), 0, MPI_COMM_WORLD);
+    data_out.write_vtu_with_pvtu_record(parent_path.string(), filename.string(), ts, MPI_COMM_WORLD);
 
     pcout << "Output written to " << config.output_filename << std::endl;
 

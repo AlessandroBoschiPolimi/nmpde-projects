@@ -1,8 +1,8 @@
 # press on the acorn from the outside
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/neo/acorn/squeeze
+file ../../mesh/mesh.msh
+out ../../out/neo/acorn/squeeze
 it 10000
 N 1
 bowl -0.5
@@ -14,8 +14,8 @@ l 2
 # press on the acorn from the inside
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/neo/acorn/explode
+file ../../mesh/mesh.msh
+out ../../out/neo/acorn/explode
 it 10000
 N 3
 bowl 0.5
@@ -27,8 +27,8 @@ l 2
 # pull the acorn from the outside
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/neo/acorn/expand
+file ../../mesh/mesh.msh
+out ../../out/neo/acorn/expand
 it 10000
 N 1
 bowl 0.5
@@ -40,8 +40,8 @@ l 2
 # pull the acorn from the outside, but no dirichlet on the inside
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/neo/acorn/expand_no_inside
+file ../../mesh/mesh.msh
+out ../../out/neo/acorn/expand_no_inside
 it 10000
 N 1
 bowl 0.5
@@ -52,8 +52,8 @@ l 2
 # pull the acorn from the inside
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/neo/acorn/implode
+file ../../mesh/mesh.msh
+out ../../out/neo/acorn/implode
 it 10000
 N 3
 bowl -0.5

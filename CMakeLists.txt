@@ -78,8 +78,5 @@ find_package(Doxygen)
 if (Doxygen_FOUND)
 	set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs)
 	message(STATUS "Using doxygen to generate documentation! Documentation will be outputted to ${DOXYGEN_OUTPUT_DIRECTORY}")
-	doxygen_add_docs(pde-06-docs
-	${PROJECT_SOURCES}
-	ALL
-	COMMENT "Generating documentation with Doxygen")
+	doxygen_add_docs(pde-06-docs ${PROJECT_SOURCES} COMMENT "Generating documentation with Doxygen")
 endif()

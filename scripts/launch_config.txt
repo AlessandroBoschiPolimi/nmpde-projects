@@ -6,7 +6,7 @@
 -----
 NeoHooke
 cube
-out ../out/neo/cube/n_push_4_d_zero_5_c1_l2_sin
+out ../../out/neo/cube/n_push_4_d_zero_5_c1_l2_sin
 it 20000
 new_damn 0.2
 N 4
@@ -18,8 +18,8 @@ l 2
 # pull the acorn from the outside, no dirichlet on the inside, sin dirichlet on top
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/neo/acorn/expand_no_inside_sin
+file ../../mesh/mesh.msh
+out ../../out/neo/acorn/expand_no_inside_sin
 it 10000
 N 1
 bowl 0.5

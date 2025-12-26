@@ -2,7 +2,7 @@
 -----
 Guccione
 cube
-out ../out/gucci/cube/n_push_4_d_zero_5_c1_b336_a07_anfe
+out ../../out/gucci/cube/n_push_4_d_zero_5_c1_b336_a07_anfe
 it 10000
 N 4
 cube_push
@@ -16,7 +16,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/gucci/cube/n_push_3_d_zero_1_0_c1_b336_a07_anfe
+out ../../out/gucci/cube/n_push_3_d_zero_1_0_c1_b336_a07_anfe
 it 10000
 N 3
 cube_push
@@ -31,7 +31,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/gucci/cube/n_push_0_1_c1_b336_a07_anfe
+out ../../out/gucci/cube/n_push_0_1_c1_b336_a07_anfe
 it 10000
 N 0, 1
 cube_push 0.2
@@ -44,7 +44,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/gucci/cube/n_pull_2_d_zero_3_c1_b336_a07_anfe
+out ../../out/gucci/cube/n_pull_2_d_zero_3_c1_b336_a07_anfe
 it 3000
 N 2
 cube_pull
@@ -57,7 +57,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/gucci/cube/n_pull_2_d_zero_1_0_c1_b336_a07_anfe
+out ../../out/gucci/cube/n_pull_2_d_zero_1_0_c1_b336_a07_anfe
 it 10000
 N 2
 cube_pull
@@ -72,7 +72,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/gucci/cube/n_pull_4_5_c1_b336_a07_anfe
+out ../../out/gucci/cube/n_pull_4_5_c1_b336_a07_anfe
 it 10000
 N 4, 5
 cube_pull 0.2
@@ -85,7 +85,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/gucci/cube/n_push_0_1_2_3_c1_b336_a07_anfe
+out ../../out/gucci/cube/n_push_0_1_2_3_c1_b336_a07_anfe
 it 10000
 N 0, 1, 2, 3
 cube_push 0.2
@@ -98,7 +98,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/gucci/cube/n_pull_0_1_2_3_c1_b336_a07_anfe
+out ../../out/gucci/cube/n_pull_0_1_2_3_c1_b336_a07_anfe
 it 10000
 N 0, 1, 2, 3
 cube_push 0.2

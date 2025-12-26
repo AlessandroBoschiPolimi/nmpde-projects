@@ -1,7 +1,7 @@
 -----
 Guccione
 rod
-out ../out/guccione
+out ../../out/guccione
 it 10000
 N 4
 rod_pull 0.004

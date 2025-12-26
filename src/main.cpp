@@ -52,8 +52,8 @@ int main(int argc, char *argv[])
         pcout << "Starting work:\n";
         std::unique_ptr<MeshGenerator<dim>> mesh_src;
         if (w.geometry == Work::GeometryType::File) {
-            pcout << "Using mesh from file: " << std::get<std::string>(w.mesh_param.value()) << '\n';
-            mesh_src = std::make_unique<MeshLoader<dim>>(std::get<std::string>(w.mesh_param.value()));
+            pcout << "Using mesh from file: " << std::get<std::filesystem::path>(w.mesh_param.value()) << '\n';
+            mesh_src = std::make_unique<MeshLoader<dim>>(std::get<std::filesystem::path>(w.mesh_param.value()));
         } else if (w.geometry == Work::GeometryType::Cube) {
             pcout << "Using cube mesh, refinement " << std::get<unsigned int>(w.mesh_param.value()) << '\n';
             mesh_src = std::make_unique<CubeGenerator<dim>>(std::get<unsigned int>(w.mesh_param.value()));
@@ -117,39 +117,43 @@ int main(int argc, char *argv[])
             };
 
         // TODO: fix/add forcing term to work
-        if (w.material == Work::MaterialType::NeoHooke)
-        {
-            pcout << "NeoHooke Problem\n";
-            
-            Work::NeoHookeData params = std::get<Work::NeoHookeData>(w.problem_params);
-            pcout << "C = " << params.C << ", lambda = " << params.lambda << '\n';
+        try {
+            if (w.material == Work::MaterialType::NeoHooke)
+            {
+                pcout << "NeoHooke Problem\n";
+                
+                Work::NeoHookeData params = std::get<Work::NeoHookeData>(w.problem_params);
+                pcout << "C = " << params.C << ", lambda = " << params.lambda << '\n';
 
-            NeoHooke problem = NeoHooke(std::move(config), pcout, mpi_rank, params.C, params.lambda);
-            problem.setup();
-            problem.solve();
-            problem.output();
-        }
-        else
-        {
-            pcout << "Guccione Problem\n";
-            
-            Work::GuccioneData params = std::get<Work::GuccioneData>(w.problem_params);
-            pcout << "c = " << params.c << '\n';
-            pcout << "b = ";
-            for (int i = 0; i < params.b.size() - 1; i++)
-                pcout << params.b[i] << ", ";
-            pcout << params.b[params.b.size() - 1] << '\n';
+                NeoHooke problem = NeoHooke(std::move(config), pcout, mpi_rank, params.C, params.lambda);
+                problem.setup();
+                problem.solve();
+                problem.output();
+            }
+            else
+            {
+                pcout << "Guccione Problem\n";
+                
+                Work::GuccioneData params = std::get<Work::GuccioneData>(w.problem_params);
+                pcout << "c = " << params.c << '\n';
+                pcout << "b = ";
+                for (unsigned int i = 0; i < params.b.size() - 1; i++)
+                    pcout << params.b[i] << ", ";
+                pcout << params.b[params.b.size() - 1] << '\n';
 
-            const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){ 
-                    return std::array<Point<dim>, dim>(
-                        { params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] }
-                    );
-                };
+                const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){ 
+                        return std::array<Point<dim>, dim>{ params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] };
+                    };
 
-            Guccione problem = Guccione(std::move(config), pcout, mpi_rank, params.c, params.b, aniso_fun);
-            problem.setup();
-            problem.solve();
-            problem.output();
+                Guccione problem = Guccione(std::move(config), pcout, mpi_rank, params.c, params.b, aniso_fun);
+                problem.setup();
+                problem.solve();
+                problem.output();
+            }
+        } catch (const dealii::ExceptionBase& e) {
+            pcout << "Deal.II exception raised:\n" << e.what() << "\nAborting!" << std::endl;
+        } catch (std::exception& e) {
+            pcout << "Exception raised:\n" << e.what() << "\nAborting!" << std::endl;
         }
 
         auto end = stdc::high_resolution_clock::now();

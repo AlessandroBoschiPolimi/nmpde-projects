@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_set>
 #include <variant>
+#include <filesystem>
 
 #include "defs.hpp"
 
@@ -16,7 +17,7 @@ struct Work {
 
     // GeometryType::File: file path
     // GeometryType::Cube: mesh refinement
-    std::optional<std::variant<std::string, unsigned int>> mesh_param;
+    std::optional<std::variant<std::filesystem::path, unsigned int>> mesh_param;
 
     std::string output_filename;
     int iterations = 0;
@@ -47,5 +48,5 @@ struct Work {
     std::variant<NeoHookeData, GuccioneData> problem_params;
 };
 
-std::vector<Work> parse_file(const std::string& path);
+std::vector<Work> parse_file(const std::filesystem::path& path);
 }

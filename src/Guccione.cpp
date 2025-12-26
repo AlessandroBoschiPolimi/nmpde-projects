@@ -61,8 +61,7 @@ void Guccione::setup() {
 			fe = std::make_unique<FESystem<dim>>(FE_Q<dim>(config.r)^dim);
 
 		pcout << "  Degree                     = " << fe->degree << std::endl;
-		pcout << "  DoFs per cell              = " << fe->dofs_per_cell
-			<< std::endl;
+		pcout << "  DoFs per cell              = " << fe->dofs_per_cell << std::endl;
 
 		// TODO: Check that these quadrature are correct enough
 		if (config.mesh_generator->ElementType() == Type::Tetrahedra) {

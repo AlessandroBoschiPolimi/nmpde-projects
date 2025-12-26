@@ -1,10 +1,10 @@
 # scenario described in "problem 2" from source 5 
 -----
 Guccione
-file ../mesh/mesh_ref.msh
-out ../out/report/gc_acorn_ref
+file ../../mesh/mesh_ref.msh
+out ../../out/report/gc_acorn_ref
 it 10000
-new_damn 0.3
+new_damn 0.5
 N 3
 bowl_ref 10000
 D 2 zero
@@ -16,7 +16,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 NeoHooke
 cube
-out ../out/report/nh_cube_pull
+out ../../out/report/nh_cube_pull
 it 10000
 N 2
 cube_pull 0.7
@@ -29,7 +29,7 @@ l 2
 -----
 NeoHooke
 cube
-out ../out/report/nh_cube_press_1
+out ../../out/report/nh_cube_press_1
 it 2000
 N 4
 cube_push
@@ -38,10 +38,10 @@ C 1
 l 2
 
 # pressing a NeoHookean cube on one side, keeping the opposite fixed, 2 * default mesh refinement
-----
+-----
 NeoHooke
 cube 2
-out ../out/report/nh_cube_press_2
+out ../../out/report/nh_cube_press_2
 it 2000
 N 4
 cube_push
@@ -50,10 +50,10 @@ C 1
 l 2
 
 # pressing a NeoHookean cube on one side, keeping the opposite fixed, 4 * default mesh refinement
-----
+-----
 NeoHooke
 cube 4
-out ../out/report/nh_cube_press_4
+out ../../out/report/nh_cube_press_4
 it 2000
 N 4
 cube_push
@@ -65,7 +65,7 @@ l 2
 -----
 Guccione
 rod
-out ../out/report/gc_rod_reference
+out ../../out/report/gc_rod_reference
 it 10000
 new_damn 0.9
 N 4
@@ -80,7 +80,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/report/gc_cube_push_alot
+out ../../out/report/gc_cube_push_alot
 it 10000
 new_damn 0.9
 N 4
@@ -94,7 +94,7 @@ anfun 1,0,0 0,1,0 0,0,1
 -----
 Guccione
 cube
-out ../out/report/gc_cube_push_alittle
+out ../../out/report/gc_cube_push_alittle
 it 10000
 new_damn 0.9
 N 0
@@ -107,8 +107,8 @@ anfun 1,0,0 0,1,0 0,0,1
 # press on the acorn from the inside
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/report/nh_acorn_explode
+file ../../mesh/mesh.msh
+out ../../out/report/nh_acorn_explode
 it 10000
 N 3
 bowl 0.5
@@ -120,8 +120,8 @@ l 2
 # press on the acorn from the inside, without outside dirichlet condition
 -----
 NeoHooke
-file ../mesh/mesh.msh
-out ../out/report/nh_acorn_explode_nooutside
+file ../../mesh/mesh.msh
+out ../../out/report/nh_acorn_explode_nooutside
 it 10000
 N 3
 bowl 0.5
@@ -130,10 +130,10 @@ C 1
 l 2
 
 # press on the acorn from the inside, without outside dirichlet condition, fine mesh
-----
+-----
 NeoHooke
-file ../mesh/mesh_fine.msh
-out ../out/report/nh_acorn_explode_nooutside_fine
+file ../../mesh/mesh_fine.msh
+out ../../out/report/nh_acorn_explode_nooutside_fine
 it 10000
 N 3
 bowl 0.5

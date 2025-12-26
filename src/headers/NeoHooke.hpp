@@ -20,7 +20,8 @@ public:
 
     void setup() override;
     void solve() override;
-    void output() const override;
+    void output() const override { output(0); }
+    void output(int ts) const;
 };
 
 }

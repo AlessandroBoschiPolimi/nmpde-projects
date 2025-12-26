@@ -10,6 +10,7 @@ mesh/*
 scripts/personal_config_*.txt
 *.vtu
 *.pvtu
+docs/*
 
 
 # User-specific files

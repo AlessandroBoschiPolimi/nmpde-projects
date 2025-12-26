@@ -6,6 +6,7 @@
 #include <deal.II/grid/grid_generator.h>
 
 #include <fstream>
+#include <filesystem>
 
 using namespace dealii;
 
@@ -29,7 +30,7 @@ template <int dim>
 class MeshLoader : public MeshGenerator<dim>
 {
 public:
-    MeshLoader(const std::string& filename_)
+    MeshLoader(const std::filesystem::path& filename_)
         : filename(filename_) {}
     ~MeshLoader() override = default;
 
@@ -58,7 +59,7 @@ public:
 public:
     static constexpr int outside_id = 1, top_id = 2, inside_id = 3;
 
-    const std::string filename;
+    const std::filesystem::path filename;
 };
 
 template <int dim>
