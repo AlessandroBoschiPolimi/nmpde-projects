@@ -1,8 +1,10 @@
-#ifndef TEST_FUNCTIONS_HPP
-#define TEST_FUNCTIONS_HPP
+#pragma once
 
-#include "MechanicalDisplacement.hpp"
+#include <deal.II/base/point.h>
+#include <deal.II/base/function.h>
+
 #include <functional>
+#include "defs.hpp"
 
 namespace pde {
 
@@ -26,7 +28,6 @@ struct TestNeumannConditions {
 };
 
 namespace TestDirichletConditions {
-    template <int dim>
     class SinXYFunction : public Function<dim>
     {
     public:
@@ -60,5 +61,3 @@ static const ForcingTermType bend_rod = [](const Point<dim> &p) {
 }
 
 }
-
-#endif // TEST_FUNCTIONS_HPP

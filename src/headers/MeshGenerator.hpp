@@ -1,3 +1,5 @@
+#pragma once
+
 #include <deal.II/distributed/fully_distributed_tria.h>
 
 #include <deal.II/grid/grid_in.h>

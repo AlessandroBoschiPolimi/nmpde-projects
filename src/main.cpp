@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
         std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions;
     	Functions::ZeroFunction<dim> zero_function(dim);
-        TestDirichletConditions::SinXYFunction<dim> sin_function;
+        TestDirichletConditions::SinXYFunction sin_function;
 
         pcout << "Diritto boundary on ids:";
         for (auto d : w.D_entries)

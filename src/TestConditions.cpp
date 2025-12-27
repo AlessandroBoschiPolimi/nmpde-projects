@@ -83,7 +83,7 @@ constexpr auto bowl_push_in = [](const Point<dim> &p) {
 
 /// -------------  ROD SECTION ----------------
 
-constexpr auto rod_pull = [](const Point<dim> &p) {
+constexpr auto rod_pull = [](const Point<dim> &) {
     const double tau = TestNeumannConditions::parameter;
     return Point<dim>(0, 0, tau);
 };

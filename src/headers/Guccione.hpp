@@ -1,6 +1,4 @@
-#ifndef GUCCIONE_HPP
-#define GUCCIONE_HPP
-
+#pragma once
 #include "MechanicalDisplacement.hpp"
 
 namespace pde {
@@ -14,7 +12,6 @@ protected:
     const std::function<std::array<Point<dim>, dim>(const Point<dim> &)> &aniso_fun; 
 
     void assemble_system() override;
-    void solve_system() override;
 
 public:
 
@@ -31,12 +28,6 @@ public:
         param_b(param_b_),
         aniso_fun(aniso_fun_)
     {}
-
-    void setup() override;
-    void solve() override;
-    void output() const override;
 };
 
 }
-
-#endif
