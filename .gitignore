@@ -6,8 +6,8 @@
 build/*
 out/*
 res/*
-mesh/*
-scripts/personal_config_*.txt
+mesh/*.msh
+configs/personal_config_*.txt
 *.vtu
 *.pvtu
 docs/*

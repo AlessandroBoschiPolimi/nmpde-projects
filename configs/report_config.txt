@@ -9,7 +9,7 @@ N 3
 bowl_ref 10000
 D 2 zero
 c 10000
-b 1 1 1 1 1 1 1 1 1
+b 1 0.5 0.5 0.5 1 0.5 0.5 0.5 1
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pulling from one side and two adj blocked
