@@ -48,7 +48,8 @@ As above, it's possible to specify the dealii path directly in the cmake command
 
 To create the mesh run the following command outside the container
 
-	gmsh scripts/mesh_ellipse.geo -3 -o mesh/mesh.msh
+	cd mesh
+	source generate.sh
 
 It requires gmsh installed
 
