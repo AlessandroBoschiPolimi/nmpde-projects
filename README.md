@@ -79,7 +79,6 @@ The work file contains the execution parameters, which have to be provided in th
 Note: comments are now supported by our parser, but it ignores only lines starting with '#'.
 
 It's possible to submit multiple jobs in the same execution, each must start with a line with exactly 5 '-'.
-If the job starts with 4 '-' it is skipped, any other amount crashes the execution.
 
 The optional parameters for the meshes are
 - `file`: mandatory `filename`
@@ -94,9 +93,13 @@ The possible values for `Dirichlet function` are
 
 Each Dirichlet boundary must be on a different line, since they can have different `Dirichlet function`.
 
+#### NeoHooke Settings
+
 The `material parameters` for NeoHooke are
 - `C <double>`: controls resistance to isochoric (shape-changing) deformation
 - `l <double>`: represents volumetric (compressibility) response
+
+#### Guccione Settings
 
 The `material parameters` for Guccione are
 - `c <double>`: todo: meaning
@@ -105,6 +108,14 @@ The `material parameters` for Guccione are
 
 There is very little validation on the input, pls be gentle.
 
+#### Options
+
+After the `-----` division line some options can be added:
+
+- `@skip`: to skip the job;
+
+#### Examples
+ 
 Below two examples
 
 	# pressing a NeoHookean cube on one side, keeping the opposite fixed, 2 * default mesh refinement

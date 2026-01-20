@@ -1,5 +1,6 @@
 #pragma once
 #include "MechanicalDisplacement.hpp"
+#include "defs.hpp"
 
 namespace pde {
 
@@ -17,11 +18,11 @@ public:
 
     Guccione(
         Config&& config_,
-	    const ConditionalOStream pcout_,
-	    const unsigned int mpi_rank_,
-	    const double param_c_,
-        const std::array<double, 9> param_b_,
-        const AnisotropicFunctionType &aniso_fun_
+	const ConditionalOStream pcout_,
+	const unsigned int mpi_rank_,
+	const double param_c_,
+	const std::array<double, 9> param_b_,
+	const AnisotropicFunctionType &aniso_fun_
     ) :
         MechanicalDisplacement(std::move(config_), pcout_, mpi_rank_),
         param_c(param_c_),

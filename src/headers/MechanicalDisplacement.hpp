@@ -94,10 +94,10 @@ public:
 public:
     MechanicalDisplacement(Config&& config_, const ConditionalOStream pcout_, const unsigned int mpi_rank_) :
         config(std::move(config_)),
-	    mesh(MPI_COMM_WORLD),
-        mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
-	    mpi_rank(mpi_rank_),
-	    pcout(pcout_)
+	mesh(MPI_COMM_WORLD),
+	mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD)),
+	mpi_rank(mpi_rank_),
+	pcout(pcout_)
     {}
     
     virtual void setup();

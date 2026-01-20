@@ -141,9 +141,11 @@ int main(int argc, char *argv[])
                     pcout << params.b[i] << ", ";
                 pcout << params.b[params.b.size() - 1] << '\n';
 
-                const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){ 
-                        return std::array<Point<dim>, dim>{ params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] };
-                    };
+                const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){
+		    return std::array<Point<dim>, dim>{ 
+			params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] 
+		    };
+                };
 
                 Guccione problem = Guccione(std::move(config), pcout, mpi_rank, params.c, params.b, aniso_fun);
                 problem.setup();

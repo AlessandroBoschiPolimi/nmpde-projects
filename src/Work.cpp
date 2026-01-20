@@ -38,6 +38,19 @@ std::vector<std::string> split(std::string s, const std::string& delimiter) {
     return tokens;
 }
 
+bool parse_options(Work &current, std::string str) {
+    std::vector<std::string> toks = split(str, " ");
+    bool skip = false;
+    for(std::string &tok : toks) {
+	if(tok == "@skip") {
+	    skip = true;
+	    continue;
+	}
+    }
+    return skip;
+}
+
+
 std::vector<Work> parse_file(const std::filesystem::path& path) {
     std::ifstream in(path);
 
@@ -52,6 +65,7 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
             throw std::runtime_error("Unexpected end of file");
         return trim(line);
     };
+    uint_fast16_t work_count = 1;
 
     while (std::getline(in, line)) {
         line = trim(line);
@@ -62,14 +76,13 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
             continue;
 
         bool skip = false;
-        if (line != "-----") {
-            if (line == "----")
-                skip = true; // easier then actually skipping the lines
-            else
-                throw std::runtime_error("Expected section separator '-----'");
+
+        if (line.substr(0,5) != "-----") {
+	    throw std::runtime_error("Expected section separator '-----'");
         }
-        
+
         Work sec;
+	skip = parse_options(sec, line.substr(5));
 
         /* Material */
         line = next_line();
@@ -203,8 +216,15 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
             {
                 if (line.empty() || line[0] != 'C')
                     throw std::runtime_error("Expected C line");
-                toks = split(line, " ");
-                data.C = std::stod(toks[1]);
+		std::string toks = line.substr(2);
+                try {
+		    data.C = std::stod(toks);
+		} catch (std::invalid_argument &invarg) {
+		    std::string err_msg = "[ERROR WHILE PARSING] at work " + 
+			std::to_string(work_count) + " while parsing c line " +
+			invarg.what();
+		    throw std::invalid_argument(err_msg);
+		}
             }
 
             line = next_line();
@@ -212,14 +232,21 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
             {
                 if (line.empty() || line[0] != 'l')
                     throw std::runtime_error("Expected lambda line");
-                toks = split(line, " ");
-                data.lambda = std::stod(toks[1]);
+		std::string toks = line.substr(2);
+		try {
+		    data.lambda = std::stod(toks);
+		} catch (std::invalid_argument &invarg) {
+		    std::string err_msg = "[ERROR WHILE PARSING] at work " + 
+			std::to_string(work_count) + " while parsing c line " +
+			invarg.what();
+		    throw std::invalid_argument(err_msg);
+		}
             }
 
             sec.problem_params = data;
         }
 	
-	    /* Guccione additional parameters*/
+	/* Guccione additional parameters*/
         if(sec.material == Work::MaterialType::Guccione) {
             Work::GuccioneData data;
 
@@ -227,31 +254,70 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
             {
                 if (line.empty() || line[0] != 'c')
                     throw std::runtime_error("Expected c line");
-                toks = split(line, " ");
-                data.c = std::stod(toks[1]);
+		std::string toks = line.substr(2);
+		try {
+		    data.c = std::stod(toks);
+		} catch (std::invalid_argument &invarg) {
+		    std::string err_msg = "[ERROR WHILE PARSING] at work " + 
+			std::to_string(work_count) + " while parsing c line " +
+			invarg.what();
+		    throw std::invalid_argument(err_msg);
+		}
             }
 
             line = next_line();
             /* b param */
             {
                 if (line.empty() || line[0] != 'b')
-                    throw std::runtime_error("Expected b line");
-                toks = split(line, " ");
+                    throw std::runtime_error("Expected b line at work " +
+					     std::to_string(work_count));
 
-                for (int i = 1; i < 10; i++) {
-                    data.b[i-1] = std::stod(toks[i]);
+                toks = split(line.substr(2), " ");
+                for (size_t i = 0; i < toks.size(); i++) {
+		    try {
+			data.b[i] = std::stod(toks[i]);
+		    } catch (std::invalid_argument &invarg) {
+			std::string err_msg = "[ERROR WHILE PARSING] at work " + 
+			    std::to_string(work_count) + " while parsing c line " +
+			    invarg.what();
+			throw std::invalid_argument(err_msg);
+		    }
                 }
             }
+
+	    /* alpha param */
+	    line = next_line();
+	    {
+		if(line.empty() || line[0] != 'a')
+		    throw std::runtime_error("Expected alpha (a line) at work " +
+			       std::to_string(work_count));
+		std::string toks = line.substr(2);
+		try {
+		    sec.newton_damping = std::stod(toks);
+		} catch (std::invalid_argument &invarg) {
+		    std::string err_msg = "[ERROR WHILE PARSING] at work " + 
+			std::to_string(work_count) + " while parsing c line " +
+			invarg.what();
+		    throw std::invalid_argument(err_msg);
+		}
+	    }
 
             line = next_line();
             /* aniso fun */
             {
                 if (line.empty())
-                    throw std::runtime_error("Expected anisotropic function line");
+                    throw std::runtime_error(
+			"Expected anisotropic function line at work "
+			+ std::to_string(work_count)
+		    );
+
                 toks = split(line, " ");
 
-                if(toks[0] != "anfun")
-                    throw std::runtime_error("Expected anisotropic function line");
+                if(toks[0] != "anfun") 
+		    throw std::runtime_error(
+			"Expected anisotropic function line at work "
+			+ std::to_string(work_count)
+		    );
 
                 std::vector<std::string> point_val;
                 for (int i = 1; i < 4; i++) {
@@ -268,7 +334,9 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
         }
 
         if (!skip)
-        	sections.push_back(std::move(sec));
+	    sections.push_back(std::move(sec));
+
+	work_count++;
     }
 
     return sections;
