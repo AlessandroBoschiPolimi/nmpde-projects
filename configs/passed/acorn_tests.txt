@@ -1,7 +1,7 @@
 # press on the acorn from the outside
 -----
 NeoHooke
-file ../../mesh/mesh.msh
+file ../../mesh/mesh_ellipse.msh
 out ../../out/neo/acorn/squeeze
 it 10000
 N 1
@@ -14,7 +14,7 @@ l 2
 # press on the acorn from the inside
 -----
 NeoHooke
-file ../../mesh/mesh.msh
+file ../../mesh/mesh_ellipse.msh
 out ../../out/neo/acorn/explode
 it 10000
 N 3
@@ -27,7 +27,7 @@ l 2
 # pull the acorn from the outside
 -----
 NeoHooke
-file ../../mesh/mesh.msh
+file ../../mesh/mesh_ellipse.msh
 out ../../out/neo/acorn/expand
 it 10000
 N 1
@@ -40,7 +40,7 @@ l 2
 # pull the acorn from the outside, but no dirichlet on the inside
 -----
 NeoHooke
-file ../../mesh/mesh.msh
+file ../../mesh/mesh_ellipse.msh
 out ../../out/neo/acorn/expand_no_inside
 it 10000
 N 1
@@ -52,7 +52,7 @@ l 2
 # pull the acorn from the inside
 -----
 NeoHooke
-file ../../mesh/mesh.msh
+file ../../mesh/mesh_ellipse.msh
 out ../../out/neo/acorn/implode
 it 10000
 N 3

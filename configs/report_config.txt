@@ -1,7 +1,7 @@
 # scenario described in "problem 2" from source 5 
 -----
 Guccione
-file ../../mesh/mesh_ref.msh
+file ../../mesh/mesh_ellipse_ref.msh
 out ../../out/report/gc_acorn_ref
 it 10000
 new_damn 0.5
@@ -107,7 +107,7 @@ anfun 1,0,0 0,1,0 0,0,1
 # press on the acorn from the inside
 -----
 NeoHooke
-file ../../mesh/mesh.msh
+file ../../mesh/mesh_ellipse.msh
 out ../../out/report/nh_acorn_explode
 it 10000
 N 3
@@ -120,7 +120,7 @@ l 2
 # press on the acorn from the inside, without outside dirichlet condition
 -----
 NeoHooke
-file ../../mesh/mesh.msh
+file ../../mesh/mesh_ellipse.msh
 out ../../out/report/nh_acorn_explode_nooutside
 it 10000
 N 3
@@ -132,7 +132,7 @@ l 2
 # press on the acorn from the inside, without outside dirichlet condition, fine mesh
 -----
 NeoHooke
-file ../../mesh/mesh_fine.msh
+file ../../mesh/mesh_ellipse_fine.msh
 out ../../out/report/nh_acorn_explode_nooutside_fine
 it 10000
 N 3

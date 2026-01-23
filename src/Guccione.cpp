@@ -66,6 +66,8 @@ void Guccione::assemble_system() {
 		#endif
 
 		for ( const unsigned int q : fe_values.quadrature_point_indices() ) {
+			auto f_loc = config.forcing_term(fe_values.quadrature_point(q));
+
             // evaluate anisotropic function
             const std::array<Point<dim>,dim> fns = aniso_fun(fe_values.quadrature_point(q));
 	    	//Get a unit matrix, cause we will need it
@@ -168,6 +170,9 @@ void Guccione::assemble_system() {
 				}
 
 				cell_rhs(i) -= double_contract<0,0,1,1>(P, phi_i_grad) * fe_values.JxW(q);
+				cell_rhs(i) += f_loc *
+						fe_values[displacement].value(i, q)
+						* fe_values.JxW(q);
 			}
 		}
 		

@@ -1,3 +1,41 @@
+# Forcing term tearing the cube apart from all directions
+-----
+NeoHooke
+cube 2
+out ../../out/neo/cube/d_zero_4_f_tear_c1_l2
+it 2000
+f cube_tear
+N 9
+cube_push
+D 4 zero
+C 1
+l 2
+
+# Forcing term compressing the cube to its core
+----- @skip
+NeoHooke
+cube 2
+out ../../out/neo/cube/d_zero_4_f_squeeze_c1_l2
+it 2000
+f cube_squeeze
+N 9
+cube_push
+D 4 zero
+C 1
+
+# Forcing term gravity like
+-----
+NeoHooke
+cube 2
+out ../../out/neo/cube/d_zero_4_f_squeezez_c1_l2
+it 2000
+f cube_squeeze_z-
+N 9
+cube_push
+D 4 zero
+C 1
+l 2
+
 # Pushing from one side (z) and opposite blocked
 ----- @skip @passed
 NeoHooke

@@ -2,27 +2,29 @@
 # if you want to keep an execution configuration that won't be altered by other people
 # use "personal_config_*.txt", it's gitignored
 
-# Pushing from one side (z) and opposite blocked, with sin condition
 -----
-NeoHooke
+Guccione
 cube
-out ../../out/neo/cube/n_push_4_d_zero_5_c1_l2_sin
-it 20000
-new_damn 0.2
-N 4
-cube_push
-D 5 sin
-C 1
-l 2
-
-# pull the acorn from the outside, no dirichlet on the inside, sin dirichlet on top
------
-NeoHooke
-file ../../mesh/mesh.msh
-out ../../out/neo/acorn/expand_no_inside_sin
+out ../../out/gucci/cube/force_iso
 it 10000
-N 1
-bowl 0.5
-D 2 sin
-C 1
-l 2
+new_damn 0.3
+f cube_squeeze_z-
+N 9
+cube_push
+D 4 zero
+c 1
+b 1 0.5 0.5 0.5 1 0.5 0.5 0.5 1
+anfun 1,0,0 0,1,0 0,0,1
+
+-----
+Guccione
+cube
+out ../../out/gucci/cube/force_aniso
+it 10000
+f cube_squeeze_z-
+N 9
+cube_push
+D 4 zero
+c 1
+b 8 4 4 4 2 2 4 2 2
+anfun 1,0,0 0,1,0 0,0,1

@@ -69,16 +69,22 @@ static const ForcingTermType bend_rod = [](const Point<dim> &p) {
 
 static const ForcingTermType cube_squeeze = [](const Point<dim> &p) {
 	Tensor<1, dim> res;
-	res[0] = -p[0] / std::abs(p[0]);
-	res[1] = -p[1] / std::abs(p[1]);
-	res[2] = -p[2] / std::abs(p[2]);
+	if (p[0] > 0.5) res[0] = -1;
+	else            res[0] = +1;
+	if (p[1] > 0.5) res[1] = -1;
+	else            res[1] = +1;
+	if (p[2] > 0.5) res[2] = -1;
+	else            res[2] = +1;
 	return res;
 };
 static const ForcingTermType cube_tear = [](const Point<dim> &p) {
 	Tensor<1, dim> res;
-	res[0] = p[0] / std::abs(p[0]);
-	res[1] = p[1] / std::abs(p[1]);
-	res[2] = p[2] / std::abs(p[2]);
+	if (p[0] > 0.5) res[0] = +1;
+	else            res[0] = -1;
+	if (p[1] > 0.5) res[1] = +1;
+	else            res[1] = -1;
+	if (p[2] > 0.5) res[2] = +1;
+	else            res[2] = -1;
 	return res;
 };
 static const ForcingTermType cube_squeeze_zm = [](const Point<dim> &) {
