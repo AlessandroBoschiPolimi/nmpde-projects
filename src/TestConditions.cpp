@@ -127,8 +127,10 @@ const pde::ForcingTermType TestForcingFunctions::choose_forcing_term(std::string
         return cube_squeeze;
     if (func_name == "cube_tear")
         return cube_tear;
-    if (func_name == "cube_squeeze_z-")
-        return cube_squeeze_zm;
+    if (func_name == "cube_squeeze_z-_lot")
+        return cube_squeeze_zm_lot;
+    if (func_name == "cube_squeeze_z-_little")
+        return cube_squeeze_zm_little;
     return null_forcing_term;
 }
 

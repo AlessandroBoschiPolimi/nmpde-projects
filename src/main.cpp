@@ -39,11 +39,13 @@ int main(int argc, char *argv[])
 
     std::vector<Work> work = parse_file(filename);
 
+    std::ofstream time_file;
+    if (mpi_rank == 0)
+        time_file = std::ofstream("times.txt");
+
     pcout << "Work size " << work.size() << '\n';
     for (auto& w : work)
     {
-        auto start = stdc::high_resolution_clock::now();
-
         pcout << "Starting work:\n";
         std::unique_ptr<MeshGenerator<dim>> mesh_src;
         if (w.geometry == Work::GeometryType::File) {
@@ -112,7 +114,9 @@ int main(int argc, char *argv[])
                 dirichlet_conditions, TestForcingFunctions::choose_forcing_term(w.forcing_term)
             };
 
-        // TODO: fix/add forcing term to work
+        pcout << "Time: " << w.time << '\n';
+        int number_executions = w.time ? 10 : 1;
+
         try {
             if (w.material == Work::MaterialType::NeoHooke)
             {
@@ -122,9 +126,29 @@ int main(int argc, char *argv[])
                 pcout << "C = " << params.C << ", lambda = " << params.lambda << '\n';
 
                 NeoHooke problem = NeoHooke(std::move(config), pcout, mpi_rank, params.C, params.lambda);
-                problem.setup();
-                problem.solve();
-                problem.output();
+                
+                stdc::nanoseconds total_time = 0ns;
+                for (int ex = 0; ex < number_executions; ex++)
+                {
+                    auto start = stdc::high_resolution_clock::now();
+                    problem.setup();
+                    problem.solve();
+                    auto end = stdc::high_resolution_clock::now();
+                    total_time += end - start;
+                    problem.output();
+                }
+                pcout << "Execution time: ";
+                float avg = float(total_time.count()) / number_executions;
+                stdc::nanoseconds avgns{(uint64_t)avg};
+                print_time(avgns, pcout);
+                pcout << '\n';
+
+                if (mpi_rank == 0)
+                {
+                    time_file << "Time "; 
+                    print_time(avgns, time_file);
+                    time_file << '\n';
+                }
             }
             else
             {
@@ -139,14 +163,34 @@ int main(int argc, char *argv[])
 
                 const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){
                     return std::array<Point<dim>, dim>{ 
-                       params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] 
+                    params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] 
                     };
                 };
 
                 Guccione problem = Guccione(std::move(config), pcout, mpi_rank, params.c, params.b, aniso_fun);
-                problem.setup();
-                problem.solve();
-                problem.output();
+                
+                stdc::nanoseconds total_time = 0ns;
+                for (int ex = 0; ex < number_executions; ex++)
+                {
+                    auto start = stdc::high_resolution_clock::now();
+                    problem.setup();
+                    problem.solve();
+                    auto end = stdc::high_resolution_clock::now();
+                    total_time += end - start;
+                    problem.output();
+                }
+                pcout << "Execution time: ";
+                float avg = float(total_time.count()) / number_executions;
+                stdc::nanoseconds avgns{(uint64_t)avg};
+                print_time(avgns, pcout);
+                pcout << '\n';
+
+                if (mpi_rank == 0)
+                {
+                    time_file << "Time "; 
+                    print_time(avgns, time_file);
+                    time_file << '\n';
+                }
             }
         } catch (const dealii::ExceptionBase& e) {
             pcout << "Deal.II exception raised:\n" << e.what() << "\nAborting!" << std::endl;
@@ -154,14 +198,10 @@ int main(int argc, char *argv[])
             pcout << "Exception raised:\n" << e.what() << "\nAborting!" << std::endl;
         }
 
-        auto end = stdc::high_resolution_clock::now();
-        auto dt = end - start;
-        pcout << "Execution time: ";
-        print_time(dt, pcout);
-
         pcout << "\n\n\n\n";
-
     }
+
+    time_file.close();
 
     return 0;
 }
@@ -188,7 +228,7 @@ void print_time(const stdc::nanoseconds& time, const ConditionalOStream& out)
     std::ios oldState(nullptr);
     oldState.copyfmt(out.get_stream());
 
-    out << std::fixed << std::setprecision(2) << value << unit;
+    out << std::fixed << std::setprecision(3) << value << unit;
 
     out.get_stream().copyfmt(oldState);
 }

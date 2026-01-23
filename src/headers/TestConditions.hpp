@@ -87,7 +87,14 @@ static const ForcingTermType cube_tear = [](const Point<dim> &p) {
 	else            res[2] = -1;
 	return res;
 };
-static const ForcingTermType cube_squeeze_zm = [](const Point<dim> &) {
+static const ForcingTermType cube_squeeze_zm_little = [](const Point<dim> &) {
+	Tensor<1, dim> res;
+	res[0] = 0;
+	res[1] = 0;
+	res[2] = -0.2;
+	return res;
+};
+static const ForcingTermType cube_squeeze_zm_lot = [](const Point<dim> &) {
 	Tensor<1, dim> res;
 	res[0] = 0;
 	res[1] = 0;

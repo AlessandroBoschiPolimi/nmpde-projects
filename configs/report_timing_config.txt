@@ -1,5 +1,5 @@
 # scenario described in "problem 2" from source 5 
------
+----- @time
 Guccione
 file ../../mesh/mesh_ellipse_ref.msh
 out ../../out/report/gc_acorn_ref
@@ -13,7 +13,7 @@ b 1 0.5 0.5 0.5 1 0.5 0.5 0.5 1
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pulling from one side and two adj blocked
------
+----- @time
 NeoHooke
 cube
 out ../../out/report/nh_cube_pull
@@ -26,7 +26,7 @@ C 1
 l 2
 
 # pressing a NeoHookean cube on one side, keeping the opposite fixed
------
+----- @time
 NeoHooke
 cube
 out ../../out/report/nh_cube_press_1
@@ -38,7 +38,7 @@ C 1
 l 2
 
 # pressing a NeoHookean cube on one side, keeping the opposite fixed, 2 * default mesh refinement
------
+----- @time
 NeoHooke
 cube 2
 out ../../out/report/nh_cube_press_2
@@ -50,7 +50,7 @@ C 1
 l 2
 
 # pressing a NeoHookean cube on one side, keeping the opposite fixed, 4 * default mesh refinement
------
+----- @time
 NeoHooke
 cube 4
 out ../../out/report/nh_cube_press_4
@@ -62,7 +62,7 @@ C 1
 l 2
 
 # guccione rod, should be the same conditions as the one in the reference 5
------
+----- @time
 Guccione
 rod
 out ../../out/report/gc_rod_reference
@@ -77,7 +77,7 @@ anfun 1,0,0 0,1,0 0,0,1
 
 
 # push the cube along the z axis, compresses it more
------
+----- @time
 Guccione
 cube
 out ../../out/report/gc_cube_push_alot
@@ -91,7 +91,7 @@ b 8 4 4 4 2 2 4 2 2
 anfun 1,0,0 0,1,0 0,0,1
 
 # push the cube along the !z axis, compresses it less
------
+----- @time
 Guccione
 cube
 out ../../out/report/gc_cube_push_alittle
@@ -105,7 +105,7 @@ b 8 4 4 4 2 2 4 2 2
 anfun 1,0,0 0,1,0 0,0,1
 
 # press on the acorn from the inside
------
+----- @time
 NeoHooke
 file ../../mesh/mesh_ellipse.msh
 out ../../out/report/nh_acorn_explode
@@ -118,7 +118,7 @@ C 1
 l 2
 
 # press on the acorn from the inside, without outside dirichlet condition
------
+----- @time
 NeoHooke
 file ../../mesh/mesh_ellipse.msh
 out ../../out/report/nh_acorn_explode_nooutside
@@ -130,7 +130,7 @@ C 1
 l 2
 
 # press on the acorn from the inside, without outside dirichlet condition, fine mesh
------
+----- @time
 NeoHooke
 file ../../mesh/mesh_ellipse_fine.msh
 out ../../out/report/nh_acorn_explode_nooutside_fine
@@ -142,7 +142,7 @@ C 1
 l 2
 
 # nh cube under (strong) gravity
------
+----- @time
 NeoHooke
 cube 2
 out ../../out/report/nh_cube_force

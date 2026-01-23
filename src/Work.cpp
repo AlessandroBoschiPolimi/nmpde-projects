@@ -29,9 +29,9 @@ std::vector<std::string> split(std::string s, const std::string& delimiter) {
 
 	std::string token;
 	while ((pos = s.find(delimiter)) != std::string::npos) {
-	token = s.substr(0, pos);
-	tokens.push_back(token);
-	s.erase(0, pos + delimiter.length());
+		token = s.substr(0, pos);
+		tokens.push_back(token);
+		s.erase(0, pos + delimiter.length());
 	}
 
 	tokens.push_back(s);
@@ -41,11 +41,15 @@ std::vector<std::string> split(std::string s, const std::string& delimiter) {
 bool parse_options(Work &current, std::string str) {
 	std::vector<std::string> toks = split(str, " ");
 	bool skip = false;
-	for(std::string &tok : toks) {
-	if(tok == "@skip") {
-		skip = true;
-		continue;
-	}
+	for (std::string &tok : toks) {
+		if (tok == "@skip") {
+			skip = true;
+			continue;
+		}
+		if (tok == "@time") {
+			current.time = true;
+			continue;
+		}
 	}
 	return skip;
 }

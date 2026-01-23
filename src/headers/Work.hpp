@@ -50,6 +50,8 @@ struct Work {
         std::array<Point<dim>, dim> aniso_fun_points;
     };
     std::variant<NeoHookeData, GuccioneData> problem_params;
+
+    bool time = false;
 };
 
 std::vector<Work> parse_file(const std::filesystem::path& path);
