@@ -140,3 +140,16 @@ bowl 0.5
 D 2 zero
 C 1
 l 2
+
+# nh cube under (strong) gravity
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_force
+it 2000
+f cube_squeeze_z-
+N 9
+cube_push
+D 4 zero
+C 1
+l 2

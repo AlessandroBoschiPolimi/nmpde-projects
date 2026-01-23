@@ -93,8 +93,7 @@ constexpr auto rod_pull = [](const Point<dim> &) {
 }
 
 
-const std::function<Point<dim> (const Point<dim> &)> 
-	TestNeumannConditions::choose_neumann_function(std::string choice)
+const std::function<Point<dim>(const Point<dim> &)> TestNeumannConditions::choose_neumann_function(std::string choice)
 {
     // Here I simply started defining different functions
     // The more models and boundary conditions we apply the better it is.
@@ -115,6 +114,22 @@ const std::function<Point<dim> (const Point<dim> &)>
 
 void TestNeumannConditions::initialize(double tau_0) {
     parameter = tau_0;
+}
+
+
+const pde::ForcingTermType TestForcingFunctions::choose_forcing_term(std::string func_name)
+{
+	if (func_name.empty() || func_name == "null")
+		return null_forcing_term;
+	if (func_name == "bend_rod")
+        return bend_rod;
+	if (func_name == "cube_squeeze")
+        return cube_squeeze;
+    if (func_name == "cube_tear")
+        return cube_tear;
+    if (func_name == "cube_squeeze_z-")
+        return cube_squeeze_zm;
+    return null_forcing_term;
 }
 
 }

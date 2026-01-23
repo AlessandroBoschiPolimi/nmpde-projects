@@ -8,11 +8,6 @@
 using namespace std::chrono_literals;
 namespace stdc = std::chrono;
 
-const pde::ForcingTermType select_forcing_term(std::string boolean_value) {
-    using namespace pde::TestForcingFunctions;
-    return std::stoi(boolean_value) ? bend_rod : null_forcing_term;
-}
-
 void print_time(const stdc::nanoseconds& time, const ConditionalOStream& out);
 
 int main(int argc, char *argv[])
@@ -27,10 +22,10 @@ int main(int argc, char *argv[])
     // Parallel output stream.
     const ConditionalOStream pcout(std::cout, mpi_rank == 0);
 
-    if (argc < 3)
+    if (argc < 2)
     {
 	    pcout << "Provide file with work\n";
-	    pcout << "Usage: ./PDE-06 <path/to/config_file.txt> [FORCING_TERM <0|1>]" << std::endl;
+	    pcout << "Usage: ./PDE-06 <path/to/config_file.txt>" << std::endl;
         return 1;
     }
 
@@ -94,26 +89,27 @@ int main(int argc, char *argv[])
 
         try {
             if (w.N_data == "") {
-                pcout << "No parameter for Neumann Condition found.\n"
-                    << "Falling back to standard: tau = 0.5" << std::endl;
+                pcout << "No parameter for Neumann Condition found.\n" << "Falling back to standard: tau = 0.5" << std::endl;
                 TestNeumannConditions::initialize();
             } else {
                 TestNeumannConditions::initialize(std::stod(w.N_data));
             }
             neumann_condition = TestNeumannConditions::choose_neumann_function(w.N_label);
-        } catch(std::invalid_argument &ia) {
+        } catch (std::invalid_argument &ia) {
             pcout << "Invalid Argument: " << ia.what() << std::endl;
-        } catch(std::runtime_error &e) { 
+        } catch (std::runtime_error &e) { 
             pcout << e.what() << " skipping work" << std::endl;
             continue;
         }
 
+        pcout << "Forcing Term: " << w.forcing_term << '\n';
+
         MechanicalDisplacement::Config config{
-                w.iterations, w.output_filename, 
+                w.iterations, w.output_filename,
                 std::move(mesh_src), r,
                 w.newton_damping, w.newton_scaling,
                 neumann_condition, w.N_values,
-                dirichlet_conditions, select_forcing_term(argv[2])
+                dirichlet_conditions, TestForcingFunctions::choose_forcing_term(w.forcing_term)
             };
 
         // TODO: fix/add forcing term to work
@@ -142,9 +138,9 @@ int main(int argc, char *argv[])
                 pcout << params.b[params.b.size() - 1] << '\n';
 
                 const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){
-		    return std::array<Point<dim>, dim>{ 
-			params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] 
-		    };
+                    return std::array<Point<dim>, dim>{ 
+                       params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] 
+                    };
                 };
 
                 Guccione problem = Guccione(std::move(config), pcout, mpi_rank, params.c, params.b, aniso_fun);

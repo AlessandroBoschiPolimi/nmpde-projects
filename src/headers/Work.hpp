@@ -27,6 +27,8 @@ struct Work {
     bool newton_damping = false;
     double newton_scaling = 1.0;
 
+    std::string forcing_term;
+
     std::unordered_set<int> N_values;
     std::string N_label;
     std::string N_data;

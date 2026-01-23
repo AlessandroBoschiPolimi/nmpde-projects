@@ -58,7 +58,7 @@ It requires gmsh installed
 ## Launch Command
 
 To run the command run:
-`./PDE-06 <work_file> <forcing_term: 0|1>`
+`./PDE-06 <work_file>`
 
 ### Configuration File
 
@@ -70,10 +70,10 @@ The work file contains the execution parameters, which have to be provided in th
 	out <filename>                                // output filename
 	it <integer>                                  // linear solver max iterations
 	[new_damn <double>]                           // newton damping
+	[f <Forcing term>]							  // see later
 	N <csv, of, integers>                         // ids of Neumann boundaries
 	<Neumann function> [parameters]               // see later
-	D <boundary_id> <Dirichlet function>          // ids of Dirichlet boundaries, see later
-	[D <boundary_id> <Dirichlet function> ...]
+	[D <boundary_id> <Dirichlet function> ...]    // ids of Dirichlet boundaries, see later
 	<material parameters>
 
 Note: comments are now supported by our parser, but it ignores only lines starting with '#'.
@@ -83,6 +83,9 @@ It's possible to submit multiple jobs in the same execution, each must start wit
 The optional parameters for the meshes are
 - `file`: mandatory `filename`
 - `cube`: optional `int`, representing the refinement of the mesh; the default is 1, corresponding to 6 subdivisions along each dimension; the parameter multiplies the subdivisions per dimension, so don't go past 3 if you want to see the results within a lifetime.
+
+The possible values for `Forcing function` are
+- `todo`
 
 The possible values for `Neumann function` are
 - `bowl_pull_out` representing a force pulling in the direction normal to surface of an ellipsoid, and as parameters expects a double representing the scaling of the force.

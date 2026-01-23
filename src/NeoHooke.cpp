@@ -60,6 +60,8 @@ void NeoHooke::assemble_system() {
 		fe_values[displacement].get_function_gradients(solution, solution_gradient_loc);
 
 		for (const unsigned int q : fe_values.quadrature_point_indices()) {
+			auto f_loc = config.forcing_term(fe_values.quadrature_point(q));
+
 			// Compute the displacement tensor I + grad(d(k)) at quadr point q
 			Tensor<2, dim> displacement_tensor({{1,0,0},{0,1,0},{0,0,1}});
 			displacement_tensor += solution_gradient_loc[q];
@@ -135,8 +137,9 @@ void NeoHooke::assemble_system() {
 						double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
 					) * fe_values.JxW(q);
 
-				cell_rhs(i) += config.forcing_term(fe_values.quadrature_point(q)) *
-						fe_values[displacement].value(i, q)[1] * (int)(fe_values.quadrature_point(q)[0] > 0) * fe_values.JxW(q);
+				cell_rhs(i) += f_loc *
+						fe_values[displacement].value(i, q)
+						* fe_values.JxW(q);
 			}
 		}
 		

@@ -32,8 +32,8 @@ void Guccione::assemble_system() {
     jacobian_matrix = 0.0;
     residual_vector = 0.0;
 
-    std::vector<Tensor<1,dim, double>>	solution_loc(n_q);
-    std::vector<Tensor<2,dim, double>>	solution_gradient_loc(n_q);
+    std::vector<Tensor<1,dim, double>> solution_loc(n_q);
+    std::vector<Tensor<2,dim, double>> solution_gradient_loc(n_q);
     
 
     // Getting a view of the <1,dim> tensor from 0:dim-1
@@ -126,20 +126,18 @@ void Guccione::assemble_system() {
 	    	P = param_c / 2.0 * std::exp(Q) * F * B + B_modulus / 2.0 * (det * std::log(det) + det - 1) * Ft;
             // compute dP/dF
 			Tensor<4, dim> dPdF;
-			for (unsigned int k = 0; k < dim; ++k){
-				for (unsigned int l = 0; l < dim; ++l){
-					for (unsigned int i = 0; i < dim; ++i){
-						for (unsigned int j = 0; j < dim; ++j){
+			for (unsigned int k = 0; k < dim; ++k) {
+				for (unsigned int l = 0; l < dim; ++l) {
+					for (unsigned int i = 0; i < dim; ++i) {
+						for (unsigned int j = 0; j < dim; ++j) {
 							dPdF[k][l][i][j] -= B_modulus / 2.0 * Ft[i][l] * Ft[k][j]  * (det * std::log(det) + det - 1);
 							dPdF[k][l][i][j] += B_modulus / 2.0 * Ft[k][l] * Ft[i][j] * det * (std::log(det) + 2);
-							if (k == i){
-								dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
-									(B[l][j]);
+							if (k == i) {
+								dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) * (B[l][j]);
 							}
-							dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) *
-										(F * B)[k][l] * (F * B)[i][j];
-							for (unsigned int n = 0; n < dim; n++){
-								for (unsigned int a = 0; a < dim; a++){
+							dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) * (F * B)[k][l] * (F * B)[i][j];
+							for (unsigned int n = 0; n < dim; n++) {
+								for (unsigned int a = 0; a < dim; a++) {
 									dPdF[k][l][i][j] += param_c / 2.0 * std::exp(Q) * F[k][a] * F[i][n] * (D[a][l][n][j]);
 								}
 							}
@@ -147,20 +145,20 @@ void Guccione::assemble_system() {
 					}
 				}
 			}
-			for ( const unsigned int i : fe_values.dof_indices() ) {
+			for (const unsigned int i : fe_values.dof_indices()) {
 				// base to describe v
 				const Tensor<2,dim> phi_i_grad = fe_values[displacement].gradient(i, q);
-				for ( const unsigned j : fe_values.dof_indices() ) {
+				for (const unsigned j : fe_values.dof_indices()) {
 					// base to describe delta
 					const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
 					//TODO:Check the signs
 					//(dPdF:grad(delta)):grad(v)
 					//TODO: Does this contract the last two indeces? Is the inermediate right?
 					Tensor<2, dim> intermediate;
-					for (unsigned int a = 0; a < dim; a++){
-						for (unsigned int b = 0; b < dim; b++){
-							for (unsigned int c = 0; c < dim; c++){
-								for (unsigned int d = 0; d < dim; d++){
+					for (unsigned int a = 0; a < dim; a++) {
+						for (unsigned int b = 0; b < dim; b++) {
+							for (unsigned int c = 0; c < dim; c++) {
+								for (unsigned int d = 0; d < dim; d++) {
 									intermediate[a][b] += dPdF[a][b][c][d] * phi_j_grad[c][d];
 								}
 							}
