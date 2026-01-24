@@ -63,7 +63,7 @@ public:
         const std::unordered_set<int> neumann_ids;
         
         // ---------- DIRICHELET CONDITIONS -----------
-        const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds;
+        const std::map<types::boundary_id, const Function<dim> *> dirichelet_conds, dirichelet_increment;
         
         // --------- FORCING TERM -------------
         const ForcingTermType forcing_term;
@@ -74,12 +74,15 @@ public:
                 const std::function<Point<dim>(const Point<dim> &)>& neumann_conds_,
                 const std::unordered_set<int>& neumann_ids_, 
                 const std::map<types::boundary_id, const Function<dim> *>& dirichelet_conds_,
+                const std::map<types::boundary_id, const Function<dim> *>& dirichelet_increment_,
                 const ForcingTermType& forcing_term_) :
             iterations(iterations_), output_filename(output_filename_),
             mesh_generator(std::move(mesh_generator_)), r(r_),
             newton_damping(newton_damping_), newton_scaling(newton_scaling_),
             neumann_conds(neumann_conds_), neumann_ids(neumann_ids_),
-            dirichelet_conds(dirichelet_conds_), forcing_term(forcing_term_)
+            dirichelet_conds(dirichelet_conds_),
+	    dirichelet_increment(dirichelet_increment_),
+	    forcing_term(forcing_term_)
         {}
 
         Config(Config&& other) :
@@ -87,7 +90,9 @@ public:
             mesh_generator(std::move(other.mesh_generator)), r(other.r),
             newton_damping(other.newton_damping), newton_scaling(other.newton_scaling),
             neumann_conds(other.neumann_conds), neumann_ids(other.neumann_ids),
-            dirichelet_conds(other.dirichelet_conds), forcing_term(other.forcing_term)
+            dirichelet_conds(other.dirichelet_conds),
+	    dirichelet_increment(other.dirichelet_increment),
+	    forcing_term(other.forcing_term)
         {}
     };
 

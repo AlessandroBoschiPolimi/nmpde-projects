@@ -36,7 +36,7 @@ namespace TestDirichletConditions {
 		{ 
 			switch (component)
 			{
-			case  2: return 0.2 * (std::sin(p[0]));
+			case  2: return 0.2 * (std::sin(p[0] * M_PI * 2));
 			default: return 0; // zero displacement along x and y axis
 			}
 		}

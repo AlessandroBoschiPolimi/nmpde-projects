@@ -238,9 +238,8 @@ void Guccione::assemble_system() {
 		std::map<types::global_dof_index, double> boundary_values;
 
 		VectorTools::interpolate_boundary_values(dof_handler,
-					config.dirichelet_conds,
+					config.dirichelet_increment,
 					boundary_values);
-
 		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
     }
 }

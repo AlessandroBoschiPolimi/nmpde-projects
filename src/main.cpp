@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
      
         pcout << "Solver iterations limit " << w.iterations << '\n';
 
-        std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions;
+        std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions, dirichlet_increment;
     	Functions::ZeroFunction<dim> zero_function(dim);
         TestDirichletConditions::SinXYFunction sin_function;
 
@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
         for (auto d : w.D_entries)
         {
             pcout << ' ' << d.value << ' ' << d.function;
+	    dirichlet_increment[d.value] = &zero_function;
             if (d.function == "zero")
                 dirichlet_conditions[d.value] = &zero_function;
             else if (d.function == "sin")
@@ -111,7 +112,9 @@ int main(int argc, char *argv[])
                 std::move(mesh_src), r,
                 w.newton_damping, w.newton_scaling,
                 neumann_condition, w.N_values,
-                dirichlet_conditions, TestForcingFunctions::choose_forcing_term(w.forcing_term)
+                dirichlet_conditions, 
+		dirichlet_increment,
+		TestForcingFunctions::choose_forcing_term(w.forcing_term)
             };
 
         pcout << "Time: " << w.time << '\n';

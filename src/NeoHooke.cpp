@@ -97,7 +97,7 @@ void NeoHooke::assemble_system() {
 					double term3 = lambda * tr_Finv_dF * scalar_product(inverse_transpose_displacement, phi_i_grad);
 
 					// term 4: - lambda * log(J) * F^{-T} dF^T F^{-T}
-					double term4 = -lambda * std::log(determinant_displacement) * scalar_product(A, phi_i_grad);
+					double term4 = -lambda * std::log((determinant_displacement)) * scalar_product(A, phi_i_grad);
 
 					cell_matrix(i, j) += (term1 + term2 + term3 + term4) * fe_values.JxW(q);
 
@@ -188,11 +188,7 @@ void NeoHooke::assemble_system() {
 
 	#if true
 		std::map<types::global_dof_index, double> boundary_values;
-		VectorTools::interpolate_boundary_values(dof_handler, config.dirichelet_conds, boundary_values);
-
-		// for (auto &bc : boundary_values)
-		// 	bc.second -= solution[bc.first];
-
+		VectorTools::interpolate_boundary_values(dof_handler, config.dirichelet_increment, boundary_values);
 		delta_owned = 0.0;
 		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
 	#endif

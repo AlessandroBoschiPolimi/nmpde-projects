@@ -92,6 +92,11 @@ void MechanicalDisplacement::setup() {
 		solution_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 		solution.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
 		delta_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+		//Set dirichlet boundaries on the solution
+		std::map<types::global_dof_index, double> boundary_values;
+		VectorTools::interpolate_boundary_values(dof_handler, config.dirichelet_conds, boundary_values);
+		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, solution_owned, residual_vector, false);
+		solution = solution_owned;
     }
 }
 
@@ -122,7 +127,7 @@ void MechanicalDisplacement::solve() {
 			break;
 		
 		// apply a homogeneous D condition on the guess update, to maintain the correct boundary condition.
-		// apply_zero_dirchlet_to_newton_update();
+		//apply_zero_dirchlet_to_newton_update();
 
 		solve_system();
 		
@@ -130,7 +135,7 @@ void MechanicalDisplacement::solve() {
 			delta_owned *= config.newton_scaling;
 		solution_owned += delta_owned;
 		solution = solution_owned;
-		solution.update_ghost_values();
+		//solution.update_ghost_values();
 
 		++n_iter;
 		// output(n_iter);
