@@ -92,11 +92,9 @@ void MechanicalDisplacement::setup() {
 		solution_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 		solution.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
 		delta_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
-		//Set dirichlet boundaries on the solution
-		std::map<types::global_dof_index, double> boundary_values;
-		VectorTools::interpolate_boundary_values(dof_handler, config.dirichelet_conds, boundary_values);
-		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, solution_owned, residual_vector, false);
-		solution = solution_owned;
+		
+		// Set dirichlet boundaries on the solution
+		apply_dirchlet_to_initial_solution();
     }
 }
 
@@ -125,9 +123,6 @@ void MechanicalDisplacement::solve() {
 		// We actually solve the system only if the residual is larger than the tolerance.
 		if (residual_norm <= residual_tolerance)
 			break;
-		
-		// apply a homogeneous D condition on the guess update, to maintain the correct boundary condition.
-		//apply_zero_dirchlet_to_newton_update();
 
 		solve_system();
 		
@@ -150,18 +145,8 @@ void MechanicalDisplacement::apply_dirchlet_to_initial_solution()
 {
 	std::map<types::global_dof_index, double> boundary_values;
 	VectorTools::interpolate_boundary_values(dof_handler, config.dirichelet_conds, boundary_values);
-	for (const auto &bc : boundary_values)
-		if (solution_owned.locally_owned_elements().is_element(bc.first))
-			solution_owned[bc.first] = bc.second;
+	MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, solution_owned, residual_vector, false);
 	solution = solution_owned;
-	solution.update_ghost_values();
-
-	// VectorTools::interpolate_boundary_values(dof_handler, dirichelet_conds, solution);
-
-	// assemble_system();
-
-	// VectorTools::interpolate_boundary_values(dof_handler, dirichelet_conds, boundary_values);
-	// MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, solution, residual_vector);
 }
 
 void MechanicalDisplacement::apply_zero_dirchlet_to_newton_update()

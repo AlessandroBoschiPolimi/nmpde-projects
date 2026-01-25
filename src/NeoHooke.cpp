@@ -186,10 +186,5 @@ void NeoHooke::assemble_system() {
     jacobian_matrix.compress(VectorOperation::add);
     residual_vector.compress(VectorOperation::add);
 
-	#if true
-		std::map<types::global_dof_index, double> boundary_values;
-		VectorTools::interpolate_boundary_values(dof_handler, config.dirichelet_increment, boundary_values);
-		delta_owned = 0.0;
-		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
-	#endif
+	apply_zero_dirchlet_to_newton_update();
 }

@@ -69,7 +69,6 @@ int main(int argc, char *argv[])
         for (auto d : w.D_entries)
         {
             pcout << ' ' << d.value << ' ' << d.function;
-	    dirichlet_increment[d.value] = &zero_function;
             if (d.function == "zero")
                 dirichlet_conditions[d.value] = &zero_function;
             else if (d.function == "sin")
@@ -113,8 +112,7 @@ int main(int argc, char *argv[])
                 w.newton_damping, w.newton_scaling,
                 neumann_condition, w.N_values,
                 dirichlet_conditions, 
-		dirichlet_increment,
-		TestForcingFunctions::choose_forcing_term(w.forcing_term)
+		        TestForcingFunctions::choose_forcing_term(w.forcing_term)
             };
 
         pcout << "Time: " << w.time << '\n';

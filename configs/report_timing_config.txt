@@ -153,3 +153,16 @@ cube_push
 D 4 zero
 C 1
 l 2
+
+# Guccione cube with a sin Dirichlet condition, pushing on the opposite side
+----- @time
+Guccione
+cube 2
+out ../../out/report/gc_cube_sin
+it 10000
+N 5
+cube_push 0.1
+D 4 sin
+c 1
+b 1 0.5 0.5 0.5 1 0.5 0.5 0.5 1
+anfun 1,0,0 0,1,0 0,0,1

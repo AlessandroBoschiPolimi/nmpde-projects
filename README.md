@@ -24,26 +24,6 @@ Then build using
 	cd build/<debug | release>
 	make -j
 
-The resulting executable is build/<debug | release>/PDE-06, to run it
-
-	mpirun --use-hwthread-cpus ./PDE-06 <work_filename> <forcing_term: 0 | 1>
-
-### **Windows**
-
-ChatGPT keeps gaslighting me by saying that is possible to compile dealii on windows, upon further queries it turns out that all the methods he provided are no longer valid (or have never been). For this reason the following instruction don't make any sense, but nevertheless i still believe in a day (within the deadline of this project) when i'll be able to use an actual IDE, so i won't erase this.
-
-Install dealii and then export an environment variable with the installation path
-
-	set DEAL_II_DIR=C:\path\to\dealii
-
-Then, open the folder with Visual Studio, it will automatically detect the CMakeLists.txt, then F5 to build and run, or ctrl+B to build.
-
-Alternatively, to generate a Visual Studio solution under the build folder
-
-	cmake -S . -B build -G "Visual Studio 17 2022"
-
-As above, it's possible to specify the dealii path directly in the cmake command.
-
 ## Mesh Generation
 
 To create the mesh run the following command outside the container
@@ -57,8 +37,9 @@ It requires gmsh installed
 
 ## Launch Command
 
-To run the command run:
-`./PDE-06 <work_file>`
+The resulting executable is `build/<debug | release>/PDE-06`, to run it
+
+	mpirun -n <# processors> ./PDE-06 <work_file>
 
 ### Configuration File
 

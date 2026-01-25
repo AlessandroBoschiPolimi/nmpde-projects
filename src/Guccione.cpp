@@ -234,13 +234,6 @@ void Guccione::assemble_system() {
     #endif
 
 
-    {
-		std::map<types::global_dof_index, double> boundary_values;
-
-		VectorTools::interpolate_boundary_values(dof_handler,
-					config.dirichelet_increment,
-					boundary_values);
-		MatrixTools::apply_boundary_values(boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
-    }
+    apply_zero_dirchlet_to_newton_update();
 }
 
