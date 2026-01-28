@@ -1,8 +1,8 @@
-# <img src="./logo.png" alt="Description of image" style="width:40px;height:40px;"/> Heart Mechanics Simplified Simulation
+# <img src="./logo.png" alt="Description of image" style="width:60px;height:60px;"/> Heart Mechanics Simplified Simulation
 
 <!--toc:start-->
 - [Build Commands](#build-commands)
-  - [**Linux**](#linux)
+  - [Linux](#linux)
 - [Mesh Generation](#mesh-generation)
 - [Launch Command](#launch-command)
   - [Configuration File](#configuration-file)
@@ -13,21 +13,22 @@
     - [Guccione Settings](#guccione-settings)
     - [Options](#options)
     - [Examples](#examples)
+- [Container](#container)
 <!--toc:end-->
 
 ## Build Commands
 
-### **Linux**
+### Linux
 
 To use dealii included in the AMSC constainer use
 
-	cmake -S . --preset linux-debug
+    cmake -S . --preset linux-debug
 	cmake -S . --preset linux-release
 
 otherwise, either
 - export the following environment variable with the path to your dealii installation
 
-		export DEAL_II_DIR=/path/to/dealii
+        export DEAL_II_DIR=/path/to/dealii
 
 - specify it just for the cmake command
 
@@ -60,7 +61,6 @@ The resulting executable is `build/<debug | release>/PDE-06`, to run it
 
 The work file contains the execution parameters, which have to be provided in the following format.
 
-    # comments
     [options]
     -----
 	<NeoHooke | Guccione>                         // material type
@@ -172,3 +172,10 @@ Below two examples
 	c 2
 	b 8 4 4 4 2 2 4 2 2
 	anfun 1,0,0 0,1,0 0,0,1
+
+## Container
+
+In order to compile this project the deal.II library is required.
+As [suggested on deal.II](https://github.com/dealii/dealii.git) it is possible 
+to use docker images in which dealii is already configured.
+

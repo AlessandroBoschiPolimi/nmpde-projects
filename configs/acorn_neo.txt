@@ -1,4 +1,5 @@
 # press on the acorn from the outside
+@passed
 -----
 NeoHooke
 file ../../mesh/mesh_ellipse.msh
@@ -12,6 +13,7 @@ C 1
 l 2
 
 # press on the acorn from the inside
+@passed
 -----
 NeoHooke
 file ../../mesh/mesh_ellipse.msh
@@ -25,6 +27,7 @@ C 1
 l 2
 
 # pull the acorn from the outside
+@passed
 -----
 NeoHooke
 file ../../mesh/mesh_ellipse.msh
@@ -38,6 +41,7 @@ C 1
 l 2
 
 # pull the acorn from the outside, but no dirichlet on the inside
+@passed
 -----
 NeoHooke
 file ../../mesh/mesh_ellipse.msh
@@ -50,6 +54,7 @@ C 1
 l 2
 
 # pull the acorn from the inside
+@passed
 -----
 NeoHooke
 file ../../mesh/mesh_ellipse.msh
