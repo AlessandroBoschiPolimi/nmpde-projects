@@ -68,10 +68,7 @@ void NeoHooke::assemble_system() {
 			const Tensor<2, dim> inverse_displacement = invert(displacement_tensor);
 			const Tensor<2, dim> inverse_transpose_displacement = transpose(inverse_displacement);
 			// Compute determinant of the displacement tensor F
-			// I am not sure about the absolute value here, but since we put it into a log, we can get a NaN easily otherwise
-			const double determinant_displacement = determinant(displacement_tensor);
-			if (determinant_displacement <= 0)
-  				throw std::runtime_error("det(F) <= 0");
+			const double determinant_displacement = std::abs(determinant(displacement_tensor));
 
 			for (const unsigned int i : fe_values.dof_indices()) {
 				// base to describe v

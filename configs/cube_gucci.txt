@@ -1,6 +1,6 @@
 # ------ Guccione -------
 # Pushing from one side (z) and opposite blocked
------ @skip
+----- 
 Guccione
 cube
 out ../../out/gucci/cube/n_push_4_d_zero_5_c1_b336_a07_anfe
@@ -13,7 +13,7 @@ b 1 0 1 0 1 0 0 0 0
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pushing from one side and two adj blocked
------ @skip
+----- 
 Guccione
 cube
 out ../../out/gucci/cube/n_push_3_d_zero_1_0_c1_b336_a07_anfe
@@ -27,7 +27,7 @@ b 1 0 1 0 1 0 0 0 0
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pushing from two sides
------ @skip
+----- 
 Guccione
 cube
 out ../../out/gucci/cube/n_push_0_1_c1_b336_a07_anfe
@@ -39,7 +39,7 @@ b 1 0 1 0 1 0 0 0 0
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pulling from one side and the other is blocked
------ @skip
+----- 
 Guccione
 cube
 out ../../out/gucci/cube/n_pull_2_d_zero_3_c1_b336_a07_anfe
@@ -51,7 +51,7 @@ b 1 0 1 0 1 0 0 0 0
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pulling from one side and two adj blocked
------ @skip
+----- 
 Guccione
 cube
 out ../../out/gucci/cube/n_pull_2_d_zero_1_0_c1_b336_a07_anfe
@@ -65,7 +65,7 @@ b 1 0 1 0 1 0 0 0 0
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pulling from two sides
------ @skip
+----- 
 Guccione
 cube
 out ../../out/gucci/cube/n_pull_4_5_c1_b336_a07_anfe
@@ -77,7 +77,7 @@ b 1 0 1 0 1 0 0 0 0
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pushing from four sides
------ @skip
+----- 
 Guccione
 cube
 out ../../out/gucci/cube/n_push_0_1_2_3_c1_b336_a07_anfe
@@ -89,7 +89,7 @@ b 1 0 1 0 1 0 0 0 0
 anfun 1,0,0 0,1,0 0,0,1
 
 # Pulling from four sides
------ @skip
+----- 
 Guccione
 cube
 out ../../out/gucci/cube/n_pull_0_1_2_3_c1_b336_a07_anfe

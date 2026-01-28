@@ -6,6 +6,14 @@
 
 namespace pde {
 
+struct ConfigOptions {
+    ConfigOptions():skip(false),time(false),passed(false),name("") {};
+    bool skip;
+    bool time;
+    bool passed;
+    std::string name;
+};
+
 std::string trim(const std::string& s) {
 	auto start = s.find_first_not_of(" \t\r\n");
 	auto end   = s.find_last_not_of(" \t\r\n");
@@ -38,24 +46,40 @@ std::vector<std::string> split(std::string s, const std::string& delimiter) {
 	return tokens;
 }
 
-bool parse_options(Work &current, std::string str) {
+void parse_options(ConfigOptions& opt,
+		   std::string str)
+{
 	std::vector<std::string> toks = split(str, " ");
-	bool skip = false;
+	if (toks.empty()) toks.push_back(str); // Maybe there's only one option
 	for (std::string &tok : toks) {
 		if (tok == "@skip") {
-			skip = true;
+			opt.skip = true;
 			continue;
 		}
 		if (tok == "@time") {
-			current.time = true;
+			opt.time = true;
 			continue;
 		}
+		if (tok.substr(0,5) == "@name") {
+		    opt.name = tok.substr(tok.find("(") + 1);
+		    opt.name.erase(opt.name.find(")"), std::string::npos);
+		    continue;
+		}
+		if (tok == "@passed") {
+		    opt.passed = true;
+		    continue;
+		}
 	}
-	return skip;
 }
 
+void apply_options(Work &current, ConfigOptions &opt) {
+    current.time = opt.time;
+    current.name = opt.name;
+    current.passed = opt.passed;
+}
 
-std::vector<Work> parse_file(const std::filesystem::path& path) {
+std::vector<Work> parse_file(const std::filesystem::path& path
+			     , const ConditionalOStream &pcout) {
 	std::ifstream in(path);
 
 	if (!in)
@@ -64,8 +88,8 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
 	std::vector<Work> sections;
 	std::string line;
 
-	auto next_line = [&](bool flag = true) -> std::string {
-		if (!std::getline(in, line) && flag)
+	auto next_line = [&]() -> std::string {
+		if (!std::getline(in, line))
 			throw std::runtime_error("Unexpected end of file");
 		return trim(line);
 	};
@@ -79,14 +103,18 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
 		if (line[0] == '#')
 			continue;
 
-		bool skip = false;
-
-		if (line.substr(0,5) != "-----") {
-		throw std::runtime_error("Expected section separator '-----'");
+		ConfigOptions opt;
+		while (line[0] == '@') {
+			parse_options(opt, line);
+			line = next_line();
 		}
 
+		if (line.substr(0,5) != "-----")
+			throw std::runtime_error("Expected section separator '-----'");
+
 		Work sec;
-		skip = parse_options(sec, line.substr(5));
+		apply_options(sec, opt);
+		bool skip = opt.skip;
 
 		/* Material */
 		line = next_line();
@@ -321,7 +349,9 @@ std::vector<Work> parse_file(const std::filesystem::path& path) {
 		}
 
 		if (!skip)
-			sections.push_back(std::move(sec));
+		    sections.push_back(std::move(sec));
+		else
+		    pcout << "Skipping " << opt.name << std::endl;
 
 		work_count++;
 	}

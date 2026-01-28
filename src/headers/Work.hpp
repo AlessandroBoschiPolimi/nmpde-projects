@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/conditional_ostream.h>
+
 #include <optional>
 #include <vector>
 #include <string>
@@ -12,6 +14,9 @@
 namespace pde {
 
 struct Work {
+    std::string name;
+    bool passed;
+
     enum MaterialType { NeoHooke, Guccione };
     MaterialType material;
     enum GeometryType { File, Cube, Rod };
@@ -54,5 +59,6 @@ struct Work {
     bool time = false;
 };
 
-std::vector<Work> parse_file(const std::filesystem::path& path);
+std::vector<Work> parse_file(const std::filesystem::path& path,
+			     const ConditionalOStream &pcout);
 }

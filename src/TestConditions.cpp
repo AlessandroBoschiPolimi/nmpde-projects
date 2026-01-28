@@ -116,22 +116,21 @@ void TestNeumannConditions::initialize(double tau_0) {
     parameter = tau_0;
 }
 
-
 const pde::ForcingTermType TestForcingFunctions::choose_forcing_term(std::string func_name)
 {
 	if (func_name.empty() || func_name == "null")
-		return null_forcing_term;
+	    return null_forcing_term;
 	if (func_name == "bend_rod")
-        return bend_rod;
+	    return bend_rod;
 	if (func_name == "cube_squeeze")
-        return cube_squeeze;
-    if (func_name == "cube_tear")
-        return cube_tear;
-    if (func_name == "cube_squeeze_z-_lot")
-        return cube_squeeze_zm_lot;
-    if (func_name == "cube_squeeze_z-_little")
-        return cube_squeeze_zm_little;
-    return null_forcing_term;
+	    return cube_squeeze;
+	if (func_name == "cube_tear")
+	    return cube_tear;
+	if (func_name == "cube_squeeze_z-_lot")
+	    return cube_squeeze_zm_lot;
+	if (func_name == "cube_squeeze_z-_little")
+	    return cube_squeeze_zm_little;
+	return null_forcing_term;
 }
 
 }

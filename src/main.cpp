@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // -- PARSING WORKS --
     std::string filename(argv[1]);
 
     if (!std::filesystem::exists(filename))
@@ -37,16 +38,25 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    std::vector<Work> work = parse_file(filename);
+    std::vector<Work> work = parse_file(filename, pcout);
 
-    std::ofstream time_file;
+    // -- OPENING TIME FILE --
+    std::ofstream ftime;
     if (mpi_rank == 0)
-        time_file = std::ofstream("times.txt");
+	ftime.open("times.txt");
+    
+    const ConditionalOStream time_file(ftime, mpi_rank == 0);
 
+    // -- RUNNING WORKS (JOBS) --
     pcout << "Work size " << work.size() << '\n';
     for (auto& w : work)
     {
-        pcout << "Starting work:\n";
+        pcout << "Starting work:";
+	if (!w.name.empty()) pcout << " " << w.name << "\n";
+	else pcout << "\n";
+	if (w.passed) pcout << "\033[32m!THIS TEST WAS MARKED AS PASSED!\033[0m'\n";
+
+	// -- Initializing Mesh --
         std::unique_ptr<MeshGenerator<dim>> mesh_src;
         if (w.geometry == Work::GeometryType::File) {
             pcout << "Using mesh from file: " << std::get<std::filesystem::path>(w.mesh_param.value()) << '\n';
@@ -61,6 +71,7 @@ int main(int argc, char *argv[])
      
         pcout << "Solver iterations limit " << w.iterations << '\n';
 
+	// -- DIRICHLET CONDITIONS --
         std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions, dirichlet_increment;
     	Functions::ZeroFunction<dim> zero_function(dim);
         TestDirichletConditions::SinXYFunction sin_function;
@@ -83,10 +94,12 @@ int main(int argc, char *argv[])
         for (auto d : w.N_values)
             pcout << ' ' << d;
         pcout << "\n";
+
+	// -- Setting up newton damping --
         if (w.newton_damping)
             pcout << "Newton scaling " << w.newton_scaling << '\n';
 
-
+	// -- NEUMANN CONDITIONS --
         std::function<Point<dim>(const Point<dim> &)> neumann_condition;
 
         try {
@@ -103,7 +116,8 @@ int main(int argc, char *argv[])
             pcout << e.what() << " skipping work" << std::endl;
             continue;
         }
-
+	
+	// -- FORCING TERM --
         pcout << "Forcing Term: " << w.forcing_term << '\n';
 
         MechanicalDisplacement::Config config{
@@ -119,7 +133,7 @@ int main(int argc, char *argv[])
         int number_executions = w.time ? 10 : 1;
 
         try {
-            if (w.material == Work::MaterialType::NeoHooke)
+            if (w.material == Work::MaterialType::NeoHooke) // -- NEOHOOKE --
             {
                 pcout << "NeoHooke Problem\n";
                 
@@ -143,15 +157,11 @@ int main(int argc, char *argv[])
                 stdc::nanoseconds avgns{(uint64_t)avg};
                 print_time(avgns, pcout);
                 pcout << '\n';
-
-                if (mpi_rank == 0)
-                {
-                    time_file << "Time "; 
-                    print_time(avgns, time_file);
-                    time_file << '\n';
-                }
+		time_file << "Time "; 
+		print_time(avgns, time_file);
+		time_file << '\n';
             }
-            else
+            else // -- GUCCIONE --
             {
                 pcout << "Guccione Problem\n";
                 
@@ -186,12 +196,9 @@ int main(int argc, char *argv[])
                 print_time(avgns, pcout);
                 pcout << '\n';
 
-                if (mpi_rank == 0)
-                {
-                    time_file << "Time "; 
-                    print_time(avgns, time_file);
-                    time_file << '\n';
-                }
+		time_file << "Time "; 
+		print_time(avgns, time_file);
+		time_file << '\n';
             }
         } catch (const dealii::ExceptionBase& e) {
             pcout << "Deal.II exception raised:\n" << e.what() << "\nAborting!" << std::endl;
@@ -202,7 +209,7 @@ int main(int argc, char *argv[])
         pcout << "\n\n\n\n";
     }
 
-    time_file.close();
+    ftime.close();
 
     return 0;
 }

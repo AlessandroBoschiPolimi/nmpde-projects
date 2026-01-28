@@ -1,4 +1,19 @@
-# Heart Mechanics Simplified Simulation
+# <img src="./logo.png" alt="Description of image" style="width:40px;height:40px;"/> Heart Mechanics Simplified Simulation
+
+<!--toc:start-->
+- [Build Commands](#build-commands)
+  - [**Linux**](#linux)
+- [Mesh Generation](#mesh-generation)
+- [Launch Command](#launch-command)
+  - [Configuration File](#configuration-file)
+    - [Forcing function](#forcing-function)
+    - [Neumann function](#neumann-function)
+    - [Dirichlet function](#dirichlet-function)
+    - [NeoHooke Settings](#neohooke-settings)
+    - [Guccione Settings](#guccione-settings)
+    - [Options](#options)
+    - [Examples](#examples)
+<!--toc:end-->
 
 ## Build Commands
 
@@ -45,7 +60,9 @@ The resulting executable is `build/<debug | release>/PDE-06`, to run it
 
 The work file contains the execution parameters, which have to be provided in the following format.
 
-	-----
+    # comments
+    [options]
+    -----
 	<NeoHooke | Guccione>                         // material type
 	<file <filename> | cube [int] | rod>          // mesh and parameters, see later
 	out <filename>                                // output filename
@@ -57,7 +74,8 @@ The work file contains the execution parameters, which have to be provided in th
 	[D <boundary_id> <Dirichlet function> ...]    // ids of Dirichlet boundaries, see later
 	<material parameters>
 
-Note: comments are now supported by our parser, but it ignores only lines starting with '#'.
+> Comments are now supported by our parser, but it ignores only lines starting with '#'.
+> All comments must be put before the division line and the options
 
 It's possible to submit multiple jobs in the same execution, each must start with a line with exactly 5 '-'.
 
@@ -65,15 +83,37 @@ The optional parameters for the meshes are
 - `file`: mandatory `filename`
 - `cube`: optional `int`, representing the refinement of the mesh; the default is 1, corresponding to 6 subdivisions along each dimension; the parameter multiplies the subdivisions per dimension, so don't go past 3 if you want to see the results within a lifetime.
 
-The possible values for `Forcing function` are
-- `todo`
+#### Forcing function
 
-The possible values for `Neumann function` are
-- `bowl_pull_out` representing a force pulling in the direction normal to surface of an ellipsoid, and as parameters expects a double representing the scaling of the force.
-- `todo`
+- `null` or an empty line: F = 0;
+- rod
+    - `bend_rod`: bends the rod (to use with the rod);
+- cube
+    - `cube_squeeze`: squeezes the cube;
+    - `cube_tear`: applies a force from inside out, tearing the cube;
+    - `cube_squeeze_z_lot`:
+    - `cube_sqeeze_z-_little`:
+- bowl
 
-The possible values for `Dirichlet function` are
-- `zero`: homogeneous Dirichlet condition
+#### Neumann function
+
+- bowl
+    - `bowl_pull_out`: represents a force pulling in the direction normal to surface of an ellipsoid,
+    and as parameters expects a double representing the scaling of the force;
+    - `bowl_push_in`: applies a force with modulus 'tau' in the normal direction w.r.t. surface of an ellipsoid with semi-axes with the ratio 7:7:17. OUTGOING. 
+    This is the force used in paper 5 problem 2, inside the acorn;
+- cube
+    - `cube_pull`: applies a force in the direction normal to the surface of the face of the cube,
+    on the whole surface. OUTGOING;
+    - `cube_push`: applies a force in the direction normal to the surface of the face of the cube,
+    on the whole surface. INGOING;
+- rod
+    - `rod_pull`
+
+#### Dirichlet function
+
+- `zero`: homogeneous Dirichlet condition;
+- `sin`: sinusoidal condition;
 
 Each Dirichlet boundary must be on a different line, since they can have different `Dirichlet function`.
 
@@ -94,15 +134,20 @@ There is very little validation on the input, pls be gentle.
 
 #### Options
 
-After the `-----` division line some options can be added:
+Before the `-----` division line some options can be added:
 
 - `@skip`: to skip the job;
+- `@passed`: to mark the job as passed. A special line will print when the job is run;
+- `@name(<name>)`: name of the test. Spaces are not allowed;
+- `@time`: ;
 
 #### Examples
  
 Below two examples
 
 	# pressing a NeoHookean cube on one side, keeping the opposite fixed, 2 * default mesh refinement
+    @name(Pressing_Cube_Neo)
+    @passed
 	-----
 	NeoHooke
 	cube 2
@@ -115,6 +160,7 @@ Below two examples
 	l 2
 
 	# example for Guccione
+    @skip @passed
 	-----
 	Guccione
 	rod
