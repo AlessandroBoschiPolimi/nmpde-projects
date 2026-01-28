@@ -78,50 +78,42 @@ void NeoHooke::assemble_system() {
 					// base to describe delta
 					const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j, q);
 
-					#if true // chatgpt version
-
 					// trace(F^{-1} dF)
 					double tr_Finv_dF = scalar_product(inverse_displacement, phi_j_grad);
 
-					// term 1: mu * dF
+					// mu * dF
 					double term1 = mu * scalar_product(phi_j_grad, phi_i_grad);
 
-					// term 2: mu * F^{-T} dF^T F^{-T}
+					// mu * F^{-T} dF^T F^{-T}
 					Tensor<2, dim> A = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
 					double term2 = mu * scalar_product(A, phi_i_grad);
 
-					// term 3: lambda * tr(F^{-1} dF) * F^{-T}
+					// lambda * tr(F^{-1} dF) * F^{-T}
 					double term3 = lambda * tr_Finv_dF * scalar_product(inverse_transpose_displacement, phi_i_grad);
 
-					// term 4: - lambda * log(J) * F^{-T} dF^T F^{-T}
+					// - lambda * log(J) * F^{-T} dF^T F^{-T}
 					double term4 = -lambda * std::log((determinant_displacement)) * scalar_product(A, phi_i_grad);
 
 					cell_matrix(i, j) += (term1 + term2 + term3 + term4) * fe_values.JxW(q);
 
-					#else // our version
+					// const Tensor<2, dim> second_member = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
 
-					const Tensor<2, dim> second_member = inverse_transpose_displacement * transpose(phi_j_grad) * inverse_transpose_displacement;
+					// cell_matrix(i,j) += mu * (
+					// 		double_contract<0,0,1,1>(phi_j_grad, phi_i_grad) + 
+					// 		double_contract<0,0,1,1>(second_member, phi_i_grad)
+					// 	) * fe_values.JxW(q);
 
-					// TODO: check correctness of the following multiplication
-					// and if there is an overloaded operator to do it
-					cell_matrix(i,j) += mu * (
-							double_contract<0,0,1,1>(phi_j_grad, phi_i_grad) + 
-							double_contract<0,0,1,1>(second_member, phi_i_grad)
-						) * fe_values.JxW(q);
-
-					// Add two additional terms arrising when lambda =/= 0
+					// // Add two additional terms arrising when lambda =/= 0
 					
-					cell_matrix(i,j) += lambda * (
-							double_contract<0,0,1,1>(phi_j_grad, inverse_transpose_displacement) * 
-							double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
-						) * fe_values.JxW(q);
+					// cell_matrix(i,j) += lambda * (
+					// 		double_contract<0,0,1,1>(phi_j_grad, inverse_transpose_displacement) * 
+					// 		double_contract<0,0,1,1>(inverse_transpose_displacement, phi_i_grad)
+					// 	) * fe_values.JxW(q);
 
-					// Is the std log relly the best here?
-					cell_matrix(i,j) -= lambda * std::log(determinant_displacement) *
-						double_contract<0,0,1,1>(second_member, phi_i_grad)
-						* fe_values.JxW(q);
-
-					#endif
+					// // Is the std log relly the best here?
+					// cell_matrix(i,j) -= lambda * std::log(determinant_displacement) *
+					// 	double_contract<0,0,1,1>(second_member, phi_i_grad)
+					// 	* fe_values.JxW(q);
 				}
 
 				cell_rhs(i) -= mu * (

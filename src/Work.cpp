@@ -182,10 +182,8 @@ std::vector<Work> parse_file(const std::filesystem::path& path
 			std::string word;
 			ss >> word;
 
-			if (word == "new_damn") {
-				sec.newton_damping = true;
-				ss >> sec.newton_scaling;
-			}
+			if (word == "new_damn")
+				ss >> sec.newton_damping;
 			else
 				no_read = true;
 		}

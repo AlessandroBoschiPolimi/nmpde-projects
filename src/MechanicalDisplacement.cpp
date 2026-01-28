@@ -18,7 +18,6 @@ void MechanicalDisplacement::setup() {
 
     // Initialize the finite element space
     {
-		// TODO: Check that this Finite Element Space suffices
 		pcout << "Initializing the finite element space" << std::endl;
 
 		if (config.mesh_generator->ElementType() == Type::Tetrahedra)
@@ -29,7 +28,6 @@ void MechanicalDisplacement::setup() {
 		pcout << "  Degree                     = " << fe->degree << std::endl;
 		pcout << "  DoFs per cell              = " << fe->dofs_per_cell << std::endl;
 
-		// TODO: Check that these quadrature are correct enough
 		if (config.mesh_generator->ElementType() == Type::Tetrahedra) {
 			quadrature = std::make_unique<QGaussSimplex<dim>>(config.r + 1);
 			quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(config.r + 1);
@@ -126,8 +124,7 @@ void MechanicalDisplacement::solve() {
 
 		solve_system();
 		
-		if (config.newton_damping)
-			delta_owned *= config.newton_scaling;
+		delta_owned *= config.newton_damping;
 		solution_owned += delta_owned;
 		solution = solution_owned;
 		//solution.update_ghost_values();
@@ -213,6 +210,24 @@ void MechanicalDisplacement::output(int ts) const {
     pcout << "Output written to " << config.output_filename << std::endl;
 
     pcout << "===============================================" << std::endl;
+}
+
+
+double MechanicalDisplacement::compute_error(const VectorTools::NormType &norm_type, const Function<dim> &exact_solution) const
+{
+    std::unique_ptr<Quadrature<dim>> quadrature_error;
+	if (config.mesh_generator->ElementType() == Type::Tetrahedra) {
+		quadrature_error = std::make_unique<QGaussSimplex<dim>>(config.r + 2);
+	} else {
+		quadrature_error = std::make_unique<QGauss<dim>>(config.r + 2);
+	}
+
+	Vector<double> error_per_cell(mesh.n_active_cells());
+	solution.update_ghost_values();
+	VectorTools::integrate_difference(dof_handler, solution, exact_solution, error_per_cell, *quadrature_error, norm_type);
+
+	const double error = VectorTools::compute_global_error(mesh, error_per_cell, norm_type);
+	return error;
 }
 
 }

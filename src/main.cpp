@@ -1,3 +1,5 @@
+#include <deal.II/base/convergence_table.h>
+
 #include "headers/NeoHooke.hpp"
 #include "headers/Guccione.hpp"
 #include "headers/TestConditions.hpp"
@@ -9,6 +11,7 @@ using namespace std::chrono_literals;
 namespace stdc = std::chrono;
 
 void print_time(const stdc::nanoseconds& time, const ConditionalOStream& out);
+void RunConvergenceTest();
 
 int main(int argc, char *argv[])
 {
@@ -22,12 +25,19 @@ int main(int argc, char *argv[])
     // Parallel output stream.
     const ConditionalOStream pcout(std::cout, mpi_rank == 0);
 
+    pcout << argc << '\n';
     if (argc < 2)
     {
 	    pcout << "Provide file with work\n";
 	    pcout << "Usage: ./PDE-06 <path/to/config_file.txt>" << std::endl;
         return 1;
     }
+
+    // if (argv[1][0] == '?')
+    // {
+    //     RunConvergenceTest();
+    //     return 0;
+    // }
 
     // -- PARSING WORKS --
     std::string filename(argv[1]);
@@ -43,7 +53,7 @@ int main(int argc, char *argv[])
     // -- OPENING TIME FILE --
     std::ofstream ftime;
     if (mpi_rank == 0)
-	ftime.open("times.txt");
+        ftime.open("times.txt");
     
     const ConditionalOStream time_file(ftime, mpi_rank == 0);
 
@@ -52,11 +62,11 @@ int main(int argc, char *argv[])
     for (auto& w : work)
     {
         pcout << "Starting work:";
-	if (!w.name.empty()) pcout << " " << w.name << "\n";
-	else pcout << "\n";
-	if (w.passed) pcout << "\033[32m!THIS TEST WAS MARKED AS PASSED!\033[0m'\n";
+        if (!w.name.empty()) pcout << " " << w.name << "\n";
+        else pcout << "\n";
+        if (w.passed) pcout << "\033[32m!THIS TEST WAS MARKED AS PASSED!\033[0m'\n";
 
-	// -- Initializing Mesh --
+	    // -- Initializing Mesh --
         std::unique_ptr<MeshGenerator<dim>> mesh_src;
         if (w.geometry == Work::GeometryType::File) {
             pcout << "Using mesh from file: " << std::get<std::filesystem::path>(w.mesh_param.value()) << '\n';
@@ -71,8 +81,8 @@ int main(int argc, char *argv[])
      
         pcout << "Solver iterations limit " << w.iterations << '\n';
 
-	// -- DIRICHLET CONDITIONS --
-        std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions, dirichlet_increment;
+	    // -- DIRICHLET CONDITIONS --
+        std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions;
     	Functions::ZeroFunction<dim> zero_function(dim);
         TestDirichletConditions::SinXYFunction sin_function;
 
@@ -95,11 +105,10 @@ int main(int argc, char *argv[])
             pcout << ' ' << d;
         pcout << "\n";
 
-	// -- Setting up newton damping --
-        if (w.newton_damping)
-            pcout << "Newton scaling " << w.newton_scaling << '\n';
+	    // -- Setting up newton damping --
+        pcout << "Newton scaling " << w.newton_damping << '\n';
 
-	// -- NEUMANN CONDITIONS --
+	    // -- NEUMANN CONDITIONS --
         std::function<Point<dim>(const Point<dim> &)> neumann_condition;
 
         try {
@@ -117,13 +126,13 @@ int main(int argc, char *argv[])
             continue;
         }
 	
-	// -- FORCING TERM --
+	    // -- FORCING TERM --
         pcout << "Forcing Term: " << w.forcing_term << '\n';
 
         MechanicalDisplacement::Config config{
                 w.iterations, w.output_filename,
                 std::move(mesh_src), r,
-                w.newton_damping, w.newton_scaling,
+                w.newton_damping,
                 neumann_condition, w.N_values,
                 dirichlet_conditions, 
 		        TestForcingFunctions::choose_forcing_term(w.forcing_term)
@@ -157,9 +166,10 @@ int main(int argc, char *argv[])
                 stdc::nanoseconds avgns{(uint64_t)avg};
                 print_time(avgns, pcout);
                 pcout << '\n';
-		time_file << "Time "; 
-		print_time(avgns, time_file);
-		time_file << '\n';
+
+                time_file << "Time "; 
+                print_time(avgns, time_file);
+                time_file << '\n';
             }
             else // -- GUCCIONE --
             {
@@ -172,9 +182,9 @@ int main(int argc, char *argv[])
                     pcout << params.b[i] << ", ";
                 pcout << params.b[params.b.size() - 1] << '\n';
 
-                const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&){
+                const AnisotropicFunctionType aniso_fun = [&params](const Point<dim>&) {
                     return std::array<Point<dim>, dim>{ 
-                    params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] 
+                        params.aniso_fun_points[0], params.aniso_fun_points[1], params.aniso_fun_points[2] 
                     };
                 };
 
@@ -196,9 +206,9 @@ int main(int argc, char *argv[])
                 print_time(avgns, pcout);
                 pcout << '\n';
 
-		time_file << "Time "; 
-		print_time(avgns, time_file);
-		time_file << '\n';
+		        time_file << "Time "; 
+                print_time(avgns, time_file);
+                time_file << '\n';
             }
         } catch (const dealii::ExceptionBase& e) {
             pcout << "Deal.II exception raised:\n" << e.what() << "\nAborting!" << std::endl;
@@ -239,4 +249,104 @@ void print_time(const stdc::nanoseconds& time, const ConditionalOStream& out)
     out << std::fixed << std::setprecision(3) << value << unit;
 
     out.get_stream().copyfmt(oldState);
+}
+
+
+namespace pde
+{
+class ExactSolution : public Function<dim>
+{
+public:
+    ExactSolution() : Function<dim>(dim) {}
+
+    virtual void vector_value(const Point<dim> &p, Vector<double> &values) const override
+    {
+        values[0] = p[2] * (p[2] - 1);
+        values[1] = p[2] * (p[2] - 1);
+        values[2] = 0;
+    }
+
+    virtual double value(const Point<dim> &p, const unsigned int component = 0) const override
+    {
+        if (component == 0) return p[2] * (p[2] - 1);
+        if (component == 1) return p[2] * (p[2] - 1);
+        return 0;
+    }
+
+    virtual void vector_gradient(const Point<dim> &p, std::vector<Tensor<1, dim>> &gradients) const override
+    {
+        gradients[0].clear();
+        gradients[0][2] = 2 * p[2] - 1;
+        gradients[1].clear();
+        gradients[1][2] = 2 * p[2] - 1;
+        gradients[2].clear();
+    }
+};
+}
+
+void RunConvergenceTest()
+{
+    using namespace pde;
+
+    const unsigned int mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD));
+    const ConditionalOStream pcout(std::cout, mpi_rank == 0);
+
+    ConvergenceTable table;
+
+    const std::vector<unsigned int> refinement_values = {1, 2};
+
+    const ExactSolution exact_solution;
+
+    for (const auto &refinement : refinement_values)
+    {
+        std::unique_ptr<MeshGenerator<dim>> mesh_src;
+        mesh_src = std::make_unique<CubeGenerator<dim>>(refinement);
+        
+        std::function<Point<dim>(const Point<dim> &)> neumann_condition = [] (const Point<dim> & p) { return p; }; // this is not used anyway
+        std::unordered_set<int> N_ids = {};
+
+        std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions;
+        Functions::ZeroFunction<dim> zero_function(dim);
+        dirichlet_conditions[4] = &zero_function;
+        dirichlet_conditions[5] = &zero_function;
+
+        ForcingTermType forcing_term = [](const Point<dim> &) {
+            Tensor<1, dim> res;
+            res[0] = -2;
+            res[1] = -2;
+            res[2] = 0;	
+            return res;
+        };
+
+        using namespace std::string_literals;
+
+        MechanicalDisplacement::Config config{
+                10000, "../../out/neo/cube/conv"s + std::to_string(refinement),
+                std::move(mesh_src), 1, 0.3,
+                neumann_condition, N_ids,
+                dirichlet_conditions, 
+                forcing_term
+            };
+
+        NeoHooke problem = NeoHooke(std::move(config), pcout, mpi_rank, 1, 2);
+        
+        problem.setup();
+        problem.solve();
+        problem.output();
+
+        const double error_L2 = problem.compute_error(VectorTools::L2_norm, exact_solution);
+        const double error_H1 = problem.compute_error(VectorTools::H1_norm, exact_solution);
+
+        table.add_value("ref", refinement);
+        table.add_value("L2", error_L2);
+        table.add_value("H1", error_H1);
+    }
+
+    table.evaluate_all_convergence_rates(ConvergenceTable::reduction_rate_log2);
+
+    table.set_scientific("L2", true);
+    table.set_scientific("H1", true);
+
+    if (mpi_rank == 0)
+        table.write_text(std::cout);
 }

@@ -48,61 +48,7 @@ namespace TestDirichletConditions {
 
 namespace TestForcingFunctions {
 
-static const ForcingTermType null_forcing_term = [](const Point<dim> &) {
-	Tensor<1, dim> res;
-	res[0] = 0;
-	res[1] = 0;
-	res[2] = 0;	
-	return res;
-};
-
-// Forcing term, hardcoded, please dont judge me, otherwise I cannot bend it
-// this function f here is f(x,y,z) = (0, 0.02 * x^2, 0) if x > 0
-// 				    = (0,0,0)            otherwise 
-static const ForcingTermType bend_rod = [](const Point<dim> &p) {
-	Tensor<1, dim> res;
-	res[0] = 0;
-	res[1] = 0.02 * std::pow(p[0], 2);
-	res[2] = 0;
-	return res;
-};
-
-static const ForcingTermType cube_squeeze = [](const Point<dim> &p) {
-	Tensor<1, dim> res;
-	if (p[0] > 0.5) res[0] = -1;
-	else            res[0] = +1;
-	if (p[1] > 0.5) res[1] = -1;
-	else            res[1] = +1;
-	if (p[2] > 0.5) res[2] = -1;
-	else            res[2] = +1;
-	return res;
-};
-static const ForcingTermType cube_tear = [](const Point<dim> &p) {
-	Tensor<1, dim> res;
-	if (p[0] > 0.5) res[0] = +1;
-	else            res[0] = -1;
-	if (p[1] > 0.5) res[1] = +1;
-	else            res[1] = -1;
-	if (p[2] > 0.5) res[2] = +1;
-	else            res[2] = -1;
-	return res;
-};
-static const ForcingTermType cube_squeeze_zm_little = [](const Point<dim> &) {
-	Tensor<1, dim> res;
-	res[0] = 0;
-	res[1] = 0;
-	res[2] = -0.2;
-	return res;
-};
-static const ForcingTermType cube_squeeze_zm_lot = [](const Point<dim> &) {
-	Tensor<1, dim> res;
-	res[0] = 0;
-	res[1] = 0;
-	res[2] = -2;
-	return res;
-};
-
-const pde::ForcingTermType choose_forcing_term(std::string func_name);
+const ForcingTermType choose_forcing_term(std::string func_name);
 
 }
 

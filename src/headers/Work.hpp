@@ -29,14 +29,13 @@ struct Work {
     std::string output_filename;
     int iterations = 0;
 
-    bool newton_damping = false;
-    double newton_scaling = 1.0;
+    double newton_damping = 1.0;
 
     std::string forcing_term;
 
-    std::unordered_set<int> N_values;
-    std::string N_label;
-    std::string N_data;
+    std::unordered_set<int> N_values; // boundary ids of the neumann condition
+    std::string N_label; // name of the neumann function
+    std::string N_data;  // parameter of the neumann function
 
     struct DEntry {
         int value;

@@ -55,8 +55,7 @@ public:
         std::unique_ptr<MeshGenerator<dim>> mesh_generator;
         const unsigned int r;
 
-        const bool newton_damping = false;
-        const double newton_scaling = 0.2;
+        const double newton_damping = 1.0;
 
         // ---------- NEUMANN CONDITIONS ----------
         const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
@@ -70,14 +69,14 @@ public:
 
         Config(const int iterations_, const std::string& output_filename_, 
                 std::unique_ptr<MeshGenerator<dim>>&& mesh_generator_, const unsigned int r_,
-                const bool newton_damping_, const double newton_scaling_,
+                const double newton_damping_,
                 const std::function<Point<dim>(const Point<dim> &)>& neumann_conds_,
                 const std::unordered_set<int>& neumann_ids_, 
                 const std::map<types::boundary_id, const Function<dim> *>& dirichelet_conds_,
                 const ForcingTermType& forcing_term_) :
             iterations(iterations_), output_filename(output_filename_),
             mesh_generator(std::move(mesh_generator_)), r(r_),
-            newton_damping(newton_damping_), newton_scaling(newton_scaling_),
+            newton_damping(newton_damping_),
             neumann_conds(neumann_conds_), neumann_ids(neumann_ids_),
             dirichelet_conds(dirichelet_conds_),
             forcing_term(forcing_term_)
@@ -86,7 +85,7 @@ public:
         Config(Config&& other) :
             iterations(other.iterations), output_filename(other.output_filename),
             mesh_generator(std::move(other.mesh_generator)), r(other.r),
-            newton_damping(other.newton_damping), newton_scaling(other.newton_scaling),
+            newton_damping(other.newton_damping),
             neumann_conds(other.neumann_conds), neumann_ids(other.neumann_ids),
             dirichelet_conds(other.dirichelet_conds),
             forcing_term(other.forcing_term)
@@ -105,6 +104,8 @@ public:
     virtual void setup();
     virtual void solve();
     virtual void output(int ts = 0) const;
+
+    double compute_error(const VectorTools::NormType &norm_type, const Function<dim> &exact_solution) const; 
 
 
 protected:
