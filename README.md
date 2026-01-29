@@ -85,42 +85,35 @@ The optional parameters for the meshes are
 
 #### Forcing function
 
-- `null` or an empty line: F = 0;
+- `null` or an empty line: $F = 0$;
 - rod
-    - `bend_rod`: bends the rod (to use with the rod);
+    - `bend_rod`: bends the rod applying the force $F = (0, 0.02 \cdot x^2, 0)$;
 - cube
     - `cube_squeeze`: squeezes the cube;
     - `cube_tear`: applies a force from inside out, tearing the cube;
-    - `cube_squeeze_z_lot`:
-    - `cube_sqeeze_z-_little`:
+    - `cube_squeeze_z-_lot`: uniform force field directed towards negative z, with small magnitude;
+    - `cube_squeeze_z-_little`: uniform force field directed towards negative z, with great magnitude;
 - bowl
+	- no specific forcing term defined
 
 #### Neumann function
 
-- bowl
-    - `bowl_pull_out`: represents a force pulling in the direction normal to surface of an ellipsoid,
-    and as parameters expects a double representing the scaling of the force;
-    - `bowl_push_in`: applies a force with modulus 'tau' in the normal direction w.r.t. surface of an ellipsoid with semi-axes with the ratio 7:7:17. OUTGOING. 
-    This is the force used in paper 5 problem 2, inside the acorn;
-- cube
-    - `cube_pull`: applies a force in the direction normal to the surface of the face of the cube,
-    on the whole surface. OUTGOING;
-    - `cube_push`: applies a force in the direction normal to the surface of the face of the cube,
-    on the whole surface. INGOING;
+- bowl: the possible neumann conditions designed for the bowl mesh are `bowl` and `bowl_ref`, representing a force normal to the surface of the ellipsoid with semi-axis in the ratio 1:1:3 and 7:7:17 respectively, diverging from its center. Both can be customized by specifying a double as parameter, representing the modulus of the force. The second corresponds to the force used in paper 5 problem 2, applied on the inner face;
+- cube: `cube_pull` and `cube_push` apply a force in the direction normal to the surface of the cube $[0, 1]^3$, pulling or pushing the face, with a modulus passed as parameter;
 - rod
     - `rod_pull`
 
 #### Dirichlet function
 
 - `zero`: homogeneous Dirichlet condition;
-- `sin`: sinusoidal condition;
+- `sin`: sinusoidal condition $d = 0.05 \sin(3 \pi x)$;
 
 Each Dirichlet boundary must be on a different line, since they can have different `Dirichlet function`.
 
 #### NeoHooke Settings
 
 The `material parameters` for NeoHooke are
-- `C <double>`: controls resistance to isochoric (shape-changing) deformation
+- `m <double>`: controls resistance to isochoric (shape-changing) deformation
 - `l <double>`: represents volumetric (compressibility) response
 
 #### Guccione Settings
@@ -139,7 +132,7 @@ Before the `-----` division line some options can be added:
 - `@skip`: to skip the job;
 - `@passed`: to mark the job as passed. A special line will print when the job is run;
 - `@name(<name>)`: name of the test. Spaces are not allowed;
-- `@time`: ;
+- `@time`: repeats the execution 10 times, averaging the execution time;
 
 #### Examples
  
@@ -156,7 +149,7 @@ Below two examples
 	N 4
 	cube_push 0.4
 	D 5 zero
-	C 1
+	m 1
 	l 2
 
 	# example for Guccione

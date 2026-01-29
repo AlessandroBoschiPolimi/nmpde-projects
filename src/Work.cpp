@@ -210,15 +210,15 @@ std::vector<Work> parse_file(const std::filesystem::path& path
 		if (line.empty() || line[0] != 'N')
 			throw std::runtime_error("Expected N line");
 
-		sec.N_values = parse_csv_ints(trim(line.substr(1)));
+		sec.neumann_ids = parse_csv_ints(trim(line.substr(1)));
 
 		/* N data line */
 		line = next_line();
 		{
 			std::stringstream ss(line);
-			ss >> sec.N_label;
-			std::getline(ss, sec.N_data);
-			sec.N_data = trim(sec.N_data);
+			ss >> sec.neumann_func;
+			std::getline(ss, sec.neumann_func_param);
+			sec.neumann_func_param = trim(sec.neumann_func_param);
 		}
 
 		/* D lines */
@@ -233,7 +233,7 @@ std::vector<Work> parse_file(const std::filesystem::path& path
 			if (sec.material == Work::MaterialType::Guccione && line[0] == 'c')
 			   break;
 
-			if (sec.material == Work::MaterialType::NeoHooke && line[0] == 'C')
+			if (sec.material == Work::MaterialType::NeoHooke && line[0] == 'm')
 				break;
 
 			if (line[0] != 'D')
@@ -247,7 +247,7 @@ std::vector<Work> parse_file(const std::filesystem::path& path
 			if (function.empty())
 				function = "zero";
 
-			sec.D_entries.push_back({value, function});
+			sec.dirichlet_conditions.push_back({value, function});
 		}
 	
 		// if in here already read line
@@ -259,11 +259,11 @@ std::vector<Work> parse_file(const std::filesystem::path& path
 
 			/* c param */
 			{
-				if (line.empty() || line[0] != 'C')
-					throw std::runtime_error("Expected C line");
+				if (line.empty() || line[0] != 'm')
+					throw std::runtime_error("Expected mu line");
 				std::string toks = line.substr(2);
 				try {
-					data.C = std::stod(toks);
+					data.mu = std::stod(toks);
 				} catch (std::invalid_argument &invarg) {
 					std::string err_msg = "[ERROR WHILE PARSING] at work " + std::to_string(work_count) + " while parsing c line " + invarg.what();
 					throw std::invalid_argument(err_msg);

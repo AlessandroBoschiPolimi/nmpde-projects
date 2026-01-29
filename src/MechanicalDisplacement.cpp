@@ -92,7 +92,7 @@ void MechanicalDisplacement::setup() {
 		delta_owned.reinit(locally_owned_dofs, MPI_COMM_WORLD);
 		
 		// Set dirichlet boundaries on the solution
-		apply_dirchlet_to_initial_solution();
+		apply_dirichlet_to_initial_solution();
     }
 }
 
@@ -138,7 +138,7 @@ void MechanicalDisplacement::solve() {
 }
 
 
-void MechanicalDisplacement::apply_dirchlet_to_initial_solution()
+void MechanicalDisplacement::apply_dirichlet_to_initial_solution()
 {
 	std::map<types::global_dof_index, double> boundary_values;
 	VectorTools::interpolate_boundary_values(dof_handler, config.dirichelet_conds, boundary_values);
@@ -146,7 +146,7 @@ void MechanicalDisplacement::apply_dirchlet_to_initial_solution()
 	solution = solution_owned;
 }
 
-void MechanicalDisplacement::apply_zero_dirchlet_to_newton_update()
+void MechanicalDisplacement::apply_zero_dirichlet_to_newton_update()
 {
 	std::map<types::global_dof_index, double> boundary_values;
 	std::map<types::boundary_id, const Function<dim> *> zero_dirichelet_conds;

@@ -208,7 +208,7 @@ void Guccione::assemble_system() {
 						// 	fe_values_boundary.JxW(q);
 
 						cell_rhs(i) +=
-							config.neumann_conds(fe_values_boundary.quadrature_point(q)) *
+							config.neumann_cond(fe_values_boundary.quadrature_point(q)) *
 							fe_values_boundary[displacement].value(i, q) *     
 							fe_values_boundary.JxW(q);
 					}
@@ -234,6 +234,6 @@ void Guccione::assemble_system() {
     #endif
 
 
-    apply_zero_dirchlet_to_newton_update();
+    apply_zero_dirichlet_to_newton_update();
 }
 

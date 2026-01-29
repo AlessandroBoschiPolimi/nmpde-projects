@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
 
     // -- RUNNING WORKS (JOBS) --
     pcout << "Work size " << work.size() << '\n';
+    int failed = 0;
     for (auto& w : work)
     {
         pcout << "Starting work:";
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
             mesh_src = std::make_unique<RodGenerator<dim>>();
         }
      
-        pcout << "Solver iterations limit " << w.iterations << '\n';
+        pcout << "Solver iterations limit: " << w.iterations << '\n';
 
 	    // -- DIRICHLET CONDITIONS --
         std::map<types::boundary_id, const Function<dim>*> dirichlet_conditions;
@@ -87,7 +88,7 @@ int main(int argc, char *argv[])
         TestDirichletConditions::SinXYFunction sin_function;
 
         pcout << "Diritto boundary on ids:";
-        for (auto d : w.D_entries)
+        for (auto d : w.dirichlet_conditions)
         {
             pcout << ' ' << d.value << ' ' << d.function;
             if (d.function == "zero")
@@ -101,24 +102,24 @@ int main(int argc, char *argv[])
         }
 	    pcout << "\n";
         pcout << "UomoNuovo boundary on ids:";
-        for (auto d : w.N_values)
+        for (auto d : w.neumann_ids)
             pcout << ' ' << d;
         pcout << "\n";
 
 	    // -- Setting up newton damping --
-        pcout << "Newton scaling " << w.newton_damping << '\n';
+        pcout << "Newton scaling: " << w.newton_damping << '\n';
 
 	    // -- NEUMANN CONDITIONS --
         std::function<Point<dim>(const Point<dim> &)> neumann_condition;
 
         try {
-            if (w.N_data == "") {
+            if (w.neumann_func_param == "") {
                 pcout << "No parameter for Neumann Condition found.\n" << "Falling back to standard: tau = 0.5" << std::endl;
                 TestNeumannConditions::initialize();
             } else {
-                TestNeumannConditions::initialize(std::stod(w.N_data));
+                TestNeumannConditions::initialize(std::stod(w.neumann_func_param));
             }
-            neumann_condition = TestNeumannConditions::choose_neumann_function(w.N_label);
+            neumann_condition = TestNeumannConditions::choose_neumann_function(w.neumann_func);
         } catch (std::invalid_argument &ia) {
             pcout << "Invalid Argument: " << ia.what() << std::endl;
         } catch (std::runtime_error &e) { 
@@ -133,7 +134,7 @@ int main(int argc, char *argv[])
                 w.iterations, w.output_filename,
                 std::move(mesh_src), r,
                 w.newton_damping,
-                neumann_condition, w.N_values,
+                neumann_condition, w.neumann_ids,
                 dirichlet_conditions, 
 		        TestForcingFunctions::choose_forcing_term(w.forcing_term)
             };
@@ -147,9 +148,9 @@ int main(int argc, char *argv[])
                 pcout << "NeoHooke Problem\n";
                 
                 Work::NeoHookeData params = std::get<Work::NeoHookeData>(w.problem_params);
-                pcout << "C = " << params.C << ", lambda = " << params.lambda << '\n';
+                pcout << "mu = " << params.mu << ", lambda = " << params.lambda << '\n';
 
-                NeoHooke problem = NeoHooke(std::move(config), pcout, mpi_rank, params.C, params.lambda);
+                NeoHooke problem = NeoHooke(std::move(config), pcout, mpi_rank, params.mu, params.lambda);
                 
                 stdc::nanoseconds total_time = 0ns;
                 for (int ex = 0; ex < number_executions; ex++)
@@ -211,13 +212,18 @@ int main(int argc, char *argv[])
                 time_file << '\n';
             }
         } catch (const dealii::ExceptionBase& e) {
+            failed++;
             pcout << "Deal.II exception raised:\n" << e.what() << "\nAborting!" << std::endl;
         } catch (std::exception& e) {
+            failed++;
             pcout << "Exception raised:\n" << e.what() << "\nAborting!" << std::endl;
         }
 
         pcout << "\n\n\n\n";
     }
+
+    if (failed != 0)
+        pcout << "FAILED TASKS: " << failed << '\n';
 
     ftime.close();
 

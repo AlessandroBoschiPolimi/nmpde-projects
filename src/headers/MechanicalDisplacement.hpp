@@ -58,7 +58,7 @@ public:
         const double newton_damping = 1.0;
 
         // ---------- NEUMANN CONDITIONS ----------
-        const std::function<Point<dim>(const Point<dim> &)> neumann_conds;
+        const std::function<Point<dim>(const Point<dim> &)> neumann_cond;
         const std::unordered_set<int> neumann_ids;
         
         // ---------- DIRICHELET CONDITIONS -----------
@@ -70,14 +70,14 @@ public:
         Config(const int iterations_, const std::string& output_filename_, 
                 std::unique_ptr<MeshGenerator<dim>>&& mesh_generator_, const unsigned int r_,
                 const double newton_damping_,
-                const std::function<Point<dim>(const Point<dim> &)>& neumann_conds_,
+                const std::function<Point<dim>(const Point<dim> &)>& neumann_cond_,
                 const std::unordered_set<int>& neumann_ids_, 
                 const std::map<types::boundary_id, const Function<dim> *>& dirichelet_conds_,
                 const ForcingTermType& forcing_term_) :
             iterations(iterations_), output_filename(output_filename_),
             mesh_generator(std::move(mesh_generator_)), r(r_),
             newton_damping(newton_damping_),
-            neumann_conds(neumann_conds_), neumann_ids(neumann_ids_),
+            neumann_cond(neumann_cond_), neumann_ids(neumann_ids_),
             dirichelet_conds(dirichelet_conds_),
             forcing_term(forcing_term_)
         {}
@@ -86,7 +86,7 @@ public:
             iterations(other.iterations), output_filename(other.output_filename),
             mesh_generator(std::move(other.mesh_generator)), r(other.r),
             newton_damping(other.newton_damping),
-            neumann_conds(other.neumann_conds), neumann_ids(other.neumann_ids),
+            neumann_cond(other.neumann_cond), neumann_ids(other.neumann_ids),
             dirichelet_conds(other.dirichelet_conds),
             forcing_term(other.forcing_term)
         {}
@@ -101,9 +101,9 @@ public:
         pcout(pcout_)
     {}
     
-    virtual void setup();
-    virtual void solve();
-    virtual void output(int ts = 0) const;
+    void setup();
+    void solve();
+    void output(int ts = 0) const;
 
     double compute_error(const VectorTools::NormType &norm_type, const Function<dim> &exact_solution) const; 
 
@@ -154,10 +154,10 @@ protected:
 
 
     virtual void assemble_system() = 0;
-    virtual void solve_system();
+    void solve_system();
 
-    virtual void apply_dirchlet_to_initial_solution();
-    virtual void apply_zero_dirchlet_to_newton_update();
+    void apply_dirichlet_to_initial_solution();
+    void apply_zero_dirichlet_to_newton_update();
 };
 
 }

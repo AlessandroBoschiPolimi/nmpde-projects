@@ -148,13 +148,13 @@ void NeoHooke::assemble_system() {
 						#if GAMBA_DEBUG
 							pcout << "Point(q) " << fe_values_boundary.quadrature_point(q)  << std::endl;
 							pcout << "Neumann Conditions: " <<
-								config.neumann_conds(fe_values_boundary.quadrature_point(q)) << std::endl;
+								config.neumann_cond(fe_values_boundary.quadrature_point(q)) << std::endl;
 							pcout << "fe_values_boundary[displacement].value(i, q) " << 
 								fe_values_boundary[displacement].value(i, q) << std::endl;
 						#endif
 
 						cell_rhs(i) +=
-							config.neumann_conds(fe_values_boundary.quadrature_point(q)) *
+							config.neumann_cond(fe_values_boundary.quadrature_point(q)) *
 							fe_values_boundary[displacement].value(i, q) *     
 							fe_values_boundary.JxW(q);
 					}
@@ -175,5 +175,5 @@ void NeoHooke::assemble_system() {
     jacobian_matrix.compress(VectorOperation::add);
     residual_vector.compress(VectorOperation::add);
 
-	apply_zero_dirchlet_to_newton_update();
+	apply_zero_dirichlet_to_newton_update();
 }
