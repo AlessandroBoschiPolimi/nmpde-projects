@@ -1,0 +1,370 @@
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l0_c2_f00625
+it 10000
+N 4
+cube_push 0.0625
+D 5 zero
+m 1
+l 0
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l0_c2_f0125
+it 10000
+N 4
+cube_push 0.125
+D 5 zero
+m 1
+l 0
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l0_c2_f025
+it 10000
+N 4
+cube_push 0.25
+D 5 zero
+m 1
+l 0
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l0_c2_f05
+it 10000
+N 4
+cube_push 0.5
+D 5 zero
+m 1
+l 0
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l0_c2_f1
+it 10000
+N 4
+cube_push 1
+D 5 zero
+m 1
+l 0
+
+
+
+
+
+#
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l2_c2_f00625
+it 10000
+N 4
+cube_push 0.0625
+D 5 zero
+m 1
+l 2
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l2_c2_f0125
+it 10000
+N 4
+cube_push 0.125
+D 5 zero
+m 1
+l 2
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l2_c2_f025
+it 10000
+N 4
+cube_push 0.25
+D 5 zero
+m 1
+l 2
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l2_c2_f05
+it 10000
+N 4
+cube_push 0.5
+D 5 zero
+m 1
+l 2
+
+
+
+
+
+#
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l4_c2_f00625
+it 10000
+N 4
+cube_push 0.0625
+D 5 zero
+m 1
+l 4
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l4_c2_f0125
+it 10000
+N 4
+cube_push 0.125
+D 5 zero
+m 1
+l 4
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l4_c2_f025
+it 10000
+N 4
+cube_push 0.25
+D 5 zero
+m 1
+l 4
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m1_l4_c2_f05
+it 10000
+N 4
+cube_push 0.5
+D 5 zero
+m 1
+l 4
+
+
+
+
+#########
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l0_c2_f00625
+it 10000
+N 4
+cube_push 0.0625
+D 5 zero
+m 2
+l 0
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l0_c2_f0125
+it 10000
+N 4
+cube_push 0.125
+D 5 zero
+m 2
+l 0
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l0_c2_f025
+it 10000
+N 4
+cube_push 0.25
+D 5 zero
+m 2
+l 0
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l0_c2_f05
+it 10000
+N 4
+cube_push 0.5
+D 5 zero
+m 2
+l 0
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l0_c2_f1
+it 10000
+N 4
+cube_push 1
+D 5 zero
+m 2
+l 0
+
+
+
+
+
+#
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l2_c2_f00625
+it 10000
+N 4
+cube_push 0.0625
+D 5 zero
+m 2
+l 2
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l2_c2_f0125
+it 10000
+N 4
+cube_push 0.125
+D 5 zero
+m 2
+l 2
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l2_c2_f025
+it 10000
+N 4
+cube_push 0.25
+D 5 zero
+m 2
+l 2
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l2_c2_f05
+it 10000
+N 4
+cube_push 0.5
+D 5 zero
+m 2
+l 2
+
+
+
+
+
+#
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l4_c2_f00625
+it 10000
+N 4
+cube_push 0.0625
+D 5 zero
+m 2
+l 4
+
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l4_c2_f0125
+it 10000
+N 4
+cube_push 0.125
+D 5 zero
+m 2
+l 4
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l4_c2_f025
+it 10000
+N 4
+cube_push 0.25
+D 5 zero
+m 2
+l 4
+
+
+# pressing a NeoHookean cube on one side, keeping the opposite fixed
+-----
+NeoHooke
+cube 2
+out ../../out/report/nh_cube_press_stab_m2_l4_c2_f05
+it 10000
+N 4
+cube_push 0.5
+D 5 zero
+m 2
+l 4
