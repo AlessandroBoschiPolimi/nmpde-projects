@@ -123,8 +123,6 @@ The `material parameters` for Guccione are
 - `b <9 space separated integers>`: 
 - `anfun <int>,<int>,<int> <int>,<int>,<int> <int>,<int>,<int>`: 
 
-There is very little validation on the input, pls be gentle.
-
 #### Options
 
 Before the `-----` division line some options can be added:
