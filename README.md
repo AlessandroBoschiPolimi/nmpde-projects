@@ -119,9 +119,9 @@ The `material parameters` for NeoHooke are
 #### Guccione Settings
 
 The `material parameters` for Guccione are
-- `c <double>`: todo: meaning
-- `b <9 space separated integers>`: 
-- `anfun <int>,<int>,<int> <int>,<int>,<int> <int>,<int>,<int>`: 
+- `c <double>`: constant that appears in the Guccione formula
+- `b <9 space separated integers>`: stiffness coefficients $b_{ij} \; \forall i,j \in \{f, s, n\}$
+- `anfun <int>,<int>,<int> <int>,<int>,<int> <int>,<int>,<int>`: $(x, y, z)$ components of the $f, s, n$ directions
 
 #### Options
 
