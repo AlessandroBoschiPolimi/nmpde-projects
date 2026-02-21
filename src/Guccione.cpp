@@ -153,9 +153,7 @@ void Guccione::assemble_system() {
 				for (const unsigned j : fe_values.dof_indices()) {
 					// base to describe delta
 					const Tensor<2, dim> phi_j_grad = fe_values[displacement].gradient(j,q);
-					//TODO:Check the signs
 					//(dPdF:grad(delta)):grad(v)
-					//TODO: Does this contract the last two indeces? Is the inermediate right?
 					Tensor<2, dim> intermediate;
 					for (unsigned int a = 0; a < dim; a++) {
 						for (unsigned int b = 0; b < dim; b++) {
